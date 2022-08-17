@@ -1,9 +1,9 @@
 [package]
 name = "jelly-mem_access"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Ryuz <ryufuchi@gmail.com>"]
 edition = "2021"
-repository = "https://github.com/ryuz/jelly/tree/master/rust/mem_access"
+repository = "https://github.com/ryuz/jelly-mem_access"
 keywords = ["mmio", "uio", "udmabuf", "u-dma-buf"]
 license = "MIT"
 
@@ -18,7 +18,7 @@ default = ["std"]
 std=["nix", "libc", "thiserror"]
 
 [dependencies]
-delegate = "0.6.1"
-nix = { version ="0.23.0", optional = true }
+delegate = "0.7.0"
+nix = { version ="0.24.2", optional = true }
 libc = { version ="0.2.109", optional = true }
 thiserror = { version = "1.0.30", optional = true }
