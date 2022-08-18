@@ -44,6 +44,35 @@ pub trait MemAccess {
     unsafe fn read_reg16(&self, reg: usize) -> u16;
     unsafe fn read_reg32(&self, reg: usize) -> u32;
     unsafe fn read_reg64(&self, reg: usize) -> u64;
+
+    unsafe fn write_memi(&self, offset: usize, data: isize);
+    unsafe fn write_memi8(&self, offset: usize, data: i8);
+    unsafe fn write_memi16(&self, offset: usize, data: i16);
+    unsafe fn write_memi32(&self, offset: usize, data: i32);
+    unsafe fn write_memi64(&self, offset: usize, data: i64);
+    unsafe fn write_memf32(&self, offset: usize, data: f32);
+    unsafe fn write_memf64(&self, offset: usize, data: f64);
+    unsafe fn read_memi(&self, offset: usize) -> isize;
+    unsafe fn read_memi8(&self, offset: usize) -> i8;
+    unsafe fn read_memi16(&self, offset: usize) -> i16;
+    unsafe fn read_memi32(&self, offset: usize) -> i32;
+    unsafe fn read_memi64(&self, offset: usize) -> i64;
+    unsafe fn read_memf32(&self, offset: usize) -> f32;
+    unsafe fn read_memf64(&self, offset: usize) -> f64;
+    unsafe fn write_regi(&self, reg: usize, data: isize);
+    unsafe fn write_regi8(&self, reg: usize, data: i8);
+    unsafe fn write_regi16(&self, reg: usize, data: i16);
+    unsafe fn write_regi32(&self, reg: usize, data: i32);
+    unsafe fn write_regi64(&self, reg: usize, data: i64);
+    unsafe fn write_regf32(&self, reg: usize, data: f32);
+    unsafe fn write_regf64(&self, reg: usize, data: f64);
+    unsafe fn read_regi(&self, reg: usize) -> isize;
+    unsafe fn read_regi8(&self, reg: usize) -> i8;
+    unsafe fn read_regi16(&self, reg: usize) -> i16;
+    unsafe fn read_regi32(&self, reg: usize) -> i32;
+    unsafe fn read_regi64(&self, reg: usize) -> i64;
+    unsafe fn read_regf32(&self, reg: usize) -> f32;
+    unsafe fn read_regf64(&self, reg: usize) -> f64;
 }
 
 pub struct MemAccessor<T: MemRegion, U> {
@@ -185,6 +214,64 @@ impl<T: MemRegion, U> MemAccess for MemAccessor<T, U> {
         self.read_mem_::<u64>(offset)
     }
 
+
+    unsafe fn write_memi(&self, offset: usize, data: isize) {
+        self.write_mem_::<isize>(offset, data)
+    }
+
+    unsafe fn write_memi8(&self, offset: usize, data: i8) {
+        self.write_mem_::<i8>(offset, data)
+    }
+
+    unsafe fn write_memi16(&self, offset: usize, data: i16) {
+        self.write_mem_::<i16>(offset, data)
+    }
+
+    unsafe fn write_memi32(&self, offset: usize, data: i32) {
+        self.write_mem_::<i32>(offset, data)
+    }
+
+    unsafe fn write_memi64(&self, offset: usize, data: i64) {
+        self.write_mem_::<i64>(offset, data)
+    }
+
+    unsafe fn write_memf32(&self, offset: usize, data: f32) {
+        self.write_mem_::<f32>(offset, data)
+    }
+
+    unsafe fn write_memf64(&self, offset: usize, data: f64) {
+        self.write_mem_::<f64>(offset, data)
+    }
+
+    unsafe fn read_memi(&self, offset: usize) -> isize {
+        self.read_mem_::<isize>(offset)
+    }
+
+    unsafe fn read_memi8(&self, offset: usize) -> i8 {
+        self.read_mem_::<i8>(offset)
+    }
+
+    unsafe fn read_memi16(&self, offset: usize) -> i16 {
+        self.read_mem_::<i16>(offset)
+    }
+
+    unsafe fn read_memi32(&self, offset: usize) -> i32 {
+        self.read_mem_::<i32>(offset)
+    }
+
+    unsafe fn read_memi64(&self, offset: usize) -> i64 {
+        self.read_mem_::<i64>(offset)
+    }
+
+    unsafe fn read_memf32(&self, offset: usize) -> f32 {
+        self.read_mem_::<f32>(offset)
+    }
+
+    unsafe fn read_memf64(&self, offset: usize) -> f64 {
+        self.read_mem_::<f64>(offset)
+    }
+
+
     unsafe fn write_reg(&self, reg: usize, data: usize) {
         self.write_reg_::<usize>(reg, data)
     }
@@ -223,5 +310,62 @@ impl<T: MemRegion, U> MemAccess for MemAccessor<T, U> {
 
     unsafe fn read_reg64(&self, reg: usize) -> u64 {
         self.read_reg_::<u64>(reg)
+    }
+
+
+    unsafe fn write_regi(&self, reg: usize, data: isize) {
+        self.write_reg_::<isize>(reg, data)
+    }
+
+    unsafe fn write_regi8(&self, reg: usize, data: i8) {
+        self.write_reg_::<i8>(reg, data)
+    }
+
+    unsafe fn write_regi16(&self, reg: usize, data: i16) {
+        self.write_reg_::<i16>(reg, data)
+    }
+
+    unsafe fn write_regi32(&self, reg: usize, data: i32) {
+        self.write_reg_::<i32>(reg, data)
+    }
+
+    unsafe fn write_regi64(&self, reg: usize, data: i64) {
+        self.write_reg_::<i64>(reg, data)
+    }
+
+    unsafe fn write_regf32(&self, reg: usize, data: f32) {
+        self.write_reg_::<f32>(reg, data)
+    }
+
+    unsafe fn write_regf64(&self, reg: usize, data: f64) {
+        self.write_reg_::<f64>(reg, data)
+    }
+
+    unsafe fn read_regi(&self, reg: usize) -> isize {
+        self.read_reg_::<isize>(reg)
+    }
+
+    unsafe fn read_regi8(&self, reg: usize) -> i8 {
+        self.read_reg_::<i8>(reg)
+    }
+
+    unsafe fn read_regi16(&self, reg: usize) -> i16 {
+        self.read_reg_::<i16>(reg)
+    }
+
+    unsafe fn read_regi32(&self, reg: usize) -> i32 {
+        self.read_reg_::<i32>(reg)
+    }
+
+    unsafe fn read_regi64(&self, reg: usize) -> i64 {
+        self.read_reg_::<i64>(reg)
+    }
+
+    unsafe fn read_regf32(&self, reg: usize) -> f32 {
+        self.read_reg_::<f32>(reg)
+    }
+
+    unsafe fn read_regf64(&self, reg: usize) -> f64 {
+        self.read_reg_::<f64>(reg)
     }
 }

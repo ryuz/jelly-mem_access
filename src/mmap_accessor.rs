@@ -234,6 +234,35 @@ impl<U> MemAccess for MmapAccessor<U> {
             unsafe fn read_reg16(&self, reg: usize) -> u16;
             unsafe fn read_reg32(&self, reg: usize) -> u32;
             unsafe fn read_reg64(&self, reg: usize) -> u64;
+
+            unsafe fn write_memi(&self, offset: usize, data: isize);
+            unsafe fn write_memi8(&self, offset: usize, data: i8);
+            unsafe fn write_memi16(&self, offset: usize, data: i16);
+            unsafe fn write_memi32(&self, offset: usize, data: i32);
+            unsafe fn write_memi64(&self, offset: usize, data: i64);
+            unsafe fn write_memf32(&self, offset: usize, data: f32);
+            unsafe fn write_memf64(&self, offset: usize, data: f64);
+            unsafe fn read_memi(&self, offset: usize) -> isize;
+            unsafe fn read_memi8(&self, offset: usize) -> i8;
+            unsafe fn read_memi16(&self, offset: usize) -> i16;
+            unsafe fn read_memi32(&self, offset: usize) -> i32;
+            unsafe fn read_memi64(&self, offset: usize) -> i64;
+            unsafe fn read_memf32(&self, offset: usize) -> f32;
+            unsafe fn read_memf64(&self, offset: usize) -> f64;
+            unsafe fn write_regi(&self, reg: usize, data: isize);
+            unsafe fn write_regi8(&self, reg: usize, data: i8);
+            unsafe fn write_regi16(&self, reg: usize, data: i16);
+            unsafe fn write_regi32(&self, reg: usize, data: i32);
+            unsafe fn write_regi64(&self, reg: usize, data: i64);
+            unsafe fn write_regf32(&self, reg: usize, data: f32);
+            unsafe fn write_regf64(&self, reg: usize, data: f64);
+            unsafe fn read_regi(&self, reg: usize) -> isize;
+            unsafe fn read_regi8(&self, reg: usize) -> i8;
+            unsafe fn read_regi16(&self, reg: usize) -> i16;
+            unsafe fn read_regi32(&self, reg: usize) -> i32;
+            unsafe fn read_regi64(&self, reg: usize) -> i64;
+            unsafe fn read_regf32(&self, reg: usize) -> f32;
+            unsafe fn read_regf64(&self, reg: usize) -> f64;            
         }
     }
 }
