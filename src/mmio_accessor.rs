@@ -46,7 +46,6 @@ impl Clone for MmioRegion {
     }
 }
 
-
 pub struct MmioAccessor<U> {
     mem_accessor: MemAccessor<MmioRegion, U>,
 }
@@ -56,7 +55,6 @@ impl<U> From<MmioAccessor<U>> for MemAccessor<MmioRegion, U> {
         from.mem_accessor
     }
 }
-
 
 impl<U> MmioAccessor<U> {
     pub const fn new(addr: usize, size: usize) -> Self {
@@ -107,7 +105,6 @@ impl<U> Clone for MmioAccessor<U> {
     }
 }
 
-
 impl<U> MemAccess for MmioAccessor<U> {
     fn reg_size() -> usize {
         core::mem::size_of::<U>()
@@ -117,10 +114,10 @@ impl<U> MemAccess for MmioAccessor<U> {
         to self.mem_accessor {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
-        
+
             unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize);
             unsafe fn copy_from<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize);
-            
+
             unsafe fn write_mem_<V>(&self, offset: usize, data: V);
             unsafe fn read_mem_<V>(&self, offset: usize) -> V;
             unsafe fn write_reg_<V>(&self, reg: usize, data: V);

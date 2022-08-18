@@ -181,10 +181,10 @@ impl<U> MemAccess for UioAccessor<U> {
         to self.mem_accessor {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
-        
+
             unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize);
             unsafe fn copy_from<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize);
-            
+
             unsafe fn write_mem_<V>(&self, offset: usize, data: V);
             unsafe fn read_mem_<V>(&self, offset: usize) -> V;
             unsafe fn write_reg_<V>(&self, reg: usize, data: V);
@@ -239,7 +239,7 @@ impl<U> MemAccess for UioAccessor<U> {
             unsafe fn read_regi32(&self, reg: usize) -> i32;
             unsafe fn read_regi64(&self, reg: usize) -> i64;
             unsafe fn read_regf32(&self, reg: usize) -> f32;
-            unsafe fn read_regf64(&self, reg: usize) -> f64; 
+            unsafe fn read_regf64(&self, reg: usize) -> f64;
         }
     }
 }

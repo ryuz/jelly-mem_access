@@ -83,7 +83,6 @@ impl Clone for UdmabufRegion {
     }
 }
 
-
 pub struct UdmabufAccessor<U> {
     mem_accessor: MemAccessor<UdmabufRegion, U>,
 }
@@ -93,7 +92,6 @@ impl<U> From<UdmabufAccessor<U>> for MemAccessor<UdmabufRegion, U> {
         from.mem_accessor
     }
 }
-
 
 impl<U> UdmabufAccessor<U> {
     pub fn new(device_name: &str, cache_enable: bool) -> Result<Self, Box<dyn Error>> {
@@ -157,10 +155,10 @@ impl<U> MemAccess for UdmabufAccessor<U> {
         to self.mem_accessor {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
-        
+
             unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize);
             unsafe fn copy_from<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize);
-            
+
             unsafe fn write_mem_<V>(&self, offset: usize, data: V);
             unsafe fn read_mem_<V>(&self, offset: usize) -> V;
             unsafe fn write_reg_<V>(&self, reg: usize, data: V);

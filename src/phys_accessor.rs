@@ -34,7 +34,6 @@ impl<const ADDR: usize, const SIZE: usize> Clone for PhysRegion<ADDR, SIZE> {
     }
 }
 
-
 pub struct PhysAccessor<U, const ADDR: usize, const SIZE: usize> {
     mem_accessor: MemAccessor<PhysRegion<ADDR, SIZE>, U>,
 }
@@ -98,7 +97,6 @@ impl<U, const ADDR: usize, const SIZE: usize> Clone for PhysAccessor<U, ADDR, SI
     }
 }
 
-
 impl<U, const ADDR: usize, const SIZE: usize> MemAccess for PhysAccessor<U, ADDR, SIZE> {
     fn reg_size() -> usize {
         core::mem::size_of::<U>()
@@ -108,10 +106,10 @@ impl<U, const ADDR: usize, const SIZE: usize> MemAccess for PhysAccessor<U, ADDR
         to self.mem_accessor {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
-        
+
             unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize);
             unsafe fn copy_from<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize);
-            
+
             unsafe fn write_mem_<V>(&self, offset: usize, data: V);
             unsafe fn read_mem_<V>(&self, offset: usize) -> V;
             unsafe fn write_reg_<V>(&self, reg: usize, data: V);

@@ -80,7 +80,6 @@ pub struct MemAccessor<T: MemRegion, U> {
     phantom: PhantomData<U>,
 }
 
-
 impl<T: MemRegion, U> MemAccessor<T, U> {
     pub const fn new(region: T) -> Self {
         MemAccessor::<T, U> {
@@ -127,7 +126,6 @@ impl<T: MemRegion, U> Clone for MemAccessor<T, U> {
         self.subclone(0, 0)
     }
 }
-
 
 impl<T: MemRegion, U> MemAccess for MemAccessor<T, U> {
     fn reg_size() -> usize {
@@ -214,7 +212,6 @@ impl<T: MemRegion, U> MemAccess for MemAccessor<T, U> {
         self.read_mem_::<u64>(offset)
     }
 
-
     unsafe fn write_memi(&self, offset: usize, data: isize) {
         self.write_mem_::<isize>(offset, data)
     }
@@ -271,7 +268,6 @@ impl<T: MemRegion, U> MemAccess for MemAccessor<T, U> {
         self.read_mem_::<f64>(offset)
     }
 
-
     unsafe fn write_reg(&self, reg: usize, data: usize) {
         self.write_reg_::<usize>(reg, data)
     }
@@ -311,7 +307,6 @@ impl<T: MemRegion, U> MemAccess for MemAccessor<T, U> {
     unsafe fn read_reg64(&self, reg: usize) -> u64 {
         self.read_reg_::<u64>(reg)
     }
-
 
     unsafe fn write_regi(&self, reg: usize, data: isize) {
         self.write_reg_::<isize>(reg, data)
