@@ -19,6 +19,6 @@ std=["nix", "libc", "thiserror"]
 
 [dependencies]
 delegate = "0.7.0"
-nix = { version ="0.24.2", optional = true }
+nix = { version ="0.25.0", optional = true }
 libc = { version ="0.2.109", optional = true }
 thiserror = { version = "1.0.30", optional = true }
