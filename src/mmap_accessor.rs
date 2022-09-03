@@ -20,6 +20,9 @@ struct MmapFile {
     size: usize,
 }
 
+unsafe impl Sync for MmapFile {}
+unsafe impl Send for MmapFile {}
+
 impl MmapFile {
     pub fn new(path: String, size: usize) -> Result<Self, Box<dyn Error>> {
         Self::new_with_flag(path, size, 0)

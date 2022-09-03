@@ -2,6 +2,7 @@
 
 #![feature(const_fn_trait_bound)]
 #![feature(const_fn_fn_ptr_basics)]
+#![allow(stable_features)]
 
 #[cfg(feature = "std")]
 extern crate std;
