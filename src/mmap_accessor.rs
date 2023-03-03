@@ -7,6 +7,7 @@ use libc;
 use nix::sys::mman::{MapFlags, ProtFlags};
 use std::boxed::Box;
 use std::error::Error;
+use std::num::NonZeroUsize;
 use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 use std::os::unix::fs::OpenOptionsExt;
@@ -36,8 +37,8 @@ impl MmapFile {
             .open(path)?;
         unsafe {
             let addr = nix::sys::mman::mmap(
-                0 as *mut libc::c_void,
-                size as libc::size_t,
+                None,
+                NonZeroUsize::new(size).unwrap(),
                 ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
                 MapFlags::MAP_SHARED,
                 file.as_raw_fd(),
