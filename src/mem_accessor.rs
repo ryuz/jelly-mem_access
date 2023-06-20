@@ -7,13 +7,17 @@ pub trait MemRegion {
     fn subclone(&self, offset: usize, size: usize) -> Self;
     fn addr(&self) -> usize;
     fn size(&self) -> usize;
+    fn phys_addr(&self) -> usize;
 }
 
 pub trait MemAccess {
     fn reg_size() -> usize;
 
+    fn subclone(&self, offset: usize, size: usize) -> Self;
+
     fn addr(&self) -> usize;
     fn size(&self) -> usize;
+    fn phys_addr(&self) -> usize;
 
     unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize);
     unsafe fn copy_from<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize);
@@ -75,9 +79,6 @@ pub trait MemAccess {
     unsafe fn read_regf64(&self, reg: usize) -> f64;
 }
 
-pub trait MemPhysAddress {
-    fn phys_addr(&self) -> usize;
-}
 
 pub struct MemAccessor<T: MemRegion, U> {
     region: T,
@@ -102,10 +103,6 @@ impl<T: MemRegion, U> MemAccessor<T, U> {
 
     pub fn subclone_<NewU>(&self, offset: usize, size: usize) -> MemAccessor<T, NewU> {
         MemAccessor::<T, NewU>::new(self.region.subclone(offset, size))
-    }
-
-    pub fn subclone(&self, offset: usize, size: usize) -> MemAccessor<T, U> {
-        self.subclone_::<U>(offset, size)
     }
 
     pub fn subclone8(&self, offset: usize, size: usize) -> MemAccessor<T, u8> {
@@ -136,6 +133,10 @@ impl<T: MemRegion, U> MemAccess for MemAccessor<T, U> {
         core::mem::size_of::<U>()
     }
 
+    fn subclone(&self, offset: usize, size: usize) -> Self {
+        self.subclone_::<U>(offset, size)
+    }
+
     fn addr(&self) -> usize {
         self.region.addr()
     }
@@ -143,6 +144,11 @@ impl<T: MemRegion, U> MemAccess for MemAccessor<T, U> {
     fn size(&self) -> usize {
         self.region.size()
     }
+
+    fn phys_addr(&self) -> usize {
+        self.addr()
+    }
+
 
     unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize) {
         assert!(src_adr + count * core::mem::size_of::<V>() <= self.size());

@@ -26,6 +26,10 @@ impl<const ADDR: usize, const SIZE: usize> MemRegion for PhysRegion<ADDR, SIZE> 
     fn size(&self) -> usize {
         SIZE
     }
+
+    fn phys_addr(&self) -> usize {
+        self.addr()
+    }
 }
 
 impl<const ADDR: usize, const SIZE: usize> Clone for PhysRegion<ADDR, SIZE> {
@@ -63,10 +67,6 @@ impl<U, const ADDR: usize, const SIZE: usize> PhysAccessor<U, ADDR, SIZE> {
         }
     }
 
-    pub fn subclone(&self, offset: usize, size: usize) -> PhysAccessor<U, ADDR, SIZE> {
-        self.subclone_::<U>(offset, size)
-    }
-
     pub fn subclone8(&self, offset: usize, size: usize) -> PhysAccessor<u8, ADDR, SIZE> {
         self.subclone_::<u8>(offset, size)
     }
@@ -102,10 +102,15 @@ impl<U, const ADDR: usize, const SIZE: usize> MemAccess for PhysAccessor<U, ADDR
         core::mem::size_of::<U>()
     }
 
+    fn subclone(&self, offset: usize, size: usize) -> Self {
+        self.subclone_::<U>(offset, size)
+    }
+
     delegate! {
         to self.mem_accessor {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
+            fn phys_addr(&self) -> usize;
 
             unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize);
             unsafe fn copy_from<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize);
