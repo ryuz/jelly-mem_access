@@ -1,4 +1,4 @@
-# Memory Mapped I/O access library
+# Memory Mapped I/O Access Library
 
 [![Crates.io][crates-badge]][crates-url]
 [![MIT licensed][license-badge]][license-url]
@@ -11,16 +11,16 @@
 
 ## Overview
 
-This is a library for accessing memory-mapped I/O.
+This library is designed for accessing memory-mapped I/O.
 
-It assists register access using UIO(User space I/O) and bare-metal access with no_std.
+It assists with register access using UIO (User Space I/O) and offers bare-metal access with no_std.
 
 It also assists access using [u-dma-buf](https://github.com/ikwzm/udmabuf/).
 
 
 ## MMIO(Memory Mapped I/O)
 
-mmio access in bare-metal programming can be written as follows.
+MMIO access in bare-metal programming can be written as follows:
 
 ```rust
     type RegisterWordSize = u64;
@@ -34,7 +34,7 @@ mmio access in bare-metal programming can be written as follows.
 
 ## UIO(Userspace I/O)
 
-UIO access in Linux programming can be written as follows.
+UIO access in Linux programming can be written as follows:
 
 ```rust
     type RegisterWordSize = usize;
@@ -45,7 +45,7 @@ UIO access in Linux programming can be written as follows.
     uio_acc.wait_irq();
 ```
 
-You can also open it by specifying a name obtained from /sys/class/uio
+You can also open it by specifying a name obtained from /sys/class/uio:
 
 ```rust
     let uio_acc = MmioAccessor::<u32>::new_with_name("uio-sample");
@@ -53,7 +53,7 @@ You can also open it by specifying a name obtained from /sys/class/uio
 
 ## u-dma-buf
 
-[u-dma-buf](https://github.com/ikwzm/udmabuf/) access in Linux programming can be written as follows.
+[u-dma-buf](https://github.com/ikwzm/udmabuf/) access in Linux programming can be written as follows:
 
 ```rust
     let udmabuf_num = 4;  // ex.) /dev/udmabuf4

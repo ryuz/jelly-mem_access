@@ -75,6 +75,10 @@ pub trait MemAccess {
     unsafe fn read_regf64(&self, reg: usize) -> f64;
 }
 
+pub trait MemPhysAddress {
+    fn phys_addr(&self) -> usize;
+}
+
 pub struct MemAccessor<T: MemRegion, U> {
     region: T,
     phantom: PhantomData<U>,

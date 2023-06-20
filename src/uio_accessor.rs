@@ -40,10 +40,6 @@ impl UioRegion {
         })
     }
 
-    pub fn phys_addr(&self) -> usize {
-        self.phys_addr
-    }
-
     pub fn set_irq_enable(&mut self, enable: bool) -> Result<(), Box<dyn Error>> {
         let data: [u8; 4] = unsafe { std::mem::transmute(if enable { 1u32 } else { 0u32 }) };
         self.mmap_region.write(&data)?;
@@ -91,6 +87,12 @@ impl MemRegion for UioRegion {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
         }
+    }
+}
+
+impl MemPhysAddress for UioRegion {
+    fn phys_addr(&self) -> usize {
+        self.phys_addr
     }
 }
 
@@ -163,7 +165,6 @@ impl<U> UioAccessor<U> {
         to self.mem_accessor.region() {
             pub fn addr(&self) -> usize;
             pub fn size(&self) -> usize;
-            pub fn phys_addr(&self) -> usize;
         }
         to self.mem_accessor.region_mut() {
             pub fn set_irq_enable(&mut self, enable: bool) -> Result<(), Box<dyn Error>>;
@@ -240,6 +241,14 @@ impl<U> MemAccess for UioAccessor<U> {
             unsafe fn read_regi64(&self, reg: usize) -> i64;
             unsafe fn read_regf32(&self, reg: usize) -> f32;
             unsafe fn read_regf64(&self, reg: usize) -> f64;
+        }
+    }
+}
+
+impl<U> MemPhysAddress for UioAccessor<U> {
+    delegate! {
+        to self.mem_accessor.region() {
+            fn phys_addr(&self) -> usize;
         }
     }
 }
