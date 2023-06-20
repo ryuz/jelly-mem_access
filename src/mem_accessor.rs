@@ -146,7 +146,7 @@ impl<T: MemRegion, U> MemAccess for MemAccessor<T, U> {
     }
 
     fn phys_addr(&self) -> usize {
-        self.addr()
+        self.region.phys_addr()
     }
 
 
