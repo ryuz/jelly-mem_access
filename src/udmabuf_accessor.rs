@@ -43,10 +43,6 @@ impl UdmabufRegion {
         Self::new(&device_name, cache_enable)
     }
 
-    pub fn phys_addr(&self) -> usize {
-        self.phys_addr
-    }
-
     pub fn read_phys_addr(device_name: &str) -> Result<usize, Box<dyn Error>> {
         let fname = format!("/sys/class/u-dma-buf/{}/phys_addr", device_name);
         Ok(usize::from_str_radix(
@@ -74,6 +70,12 @@ impl MemRegion for UdmabufRegion {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
         }
+    }
+}
+
+impl MemPhysAddress for UdmabufRegion {
+    fn phys_addr(&self) -> usize {
+        self.phys_addr
     }
 }
 
@@ -135,7 +137,6 @@ impl<U> UdmabufAccessor<U> {
         to self.mem_accessor.region() {
             pub fn addr(&self) -> usize;
             pub fn size(&self) -> usize;
-            pub fn phys_addr(&self) -> usize;
         }
     }
 }
@@ -214,6 +215,14 @@ impl<U> MemAccess for UdmabufAccessor<U> {
             unsafe fn read_regi64(&self, reg: usize) -> i64;
             unsafe fn read_regf32(&self, reg: usize) -> f32;
             unsafe fn read_regf64(&self, reg: usize) -> f64;
+        }
+    }
+}
+
+impl<U> MemPhysAddress for UdmabufAccessor<U> {
+    delegate! {
+        to self.mem_accessor.region() {
+            fn phys_addr(&self) -> usize;
         }
     }
 }
