@@ -136,6 +136,10 @@ impl MemRegion for MmapRegion {
     fn size(&self) -> usize {
         self.size
     }
+
+    fn phys_addr(&self) -> usize {
+        self.addr()
+    }
 }
 
 impl Clone for MmapRegion {
@@ -169,10 +173,6 @@ impl<U> MmapAccessor<U> {
         }
     }
 
-    pub fn subclone(&self, offset: usize, size: usize) -> MmapAccessor<U> {
-        self.subclone_::<U>(offset, size)
-    }
-
     pub fn subclone8(&self, offset: usize, size: usize) -> MmapAccessor<u8> {
         self.subclone_::<u8>(offset, size)
     }
@@ -201,10 +201,15 @@ impl<U> MemAccess for MmapAccessor<U> {
         core::mem::size_of::<U>()
     }
 
+    fn subclone(&self, offset: usize, size: usize) -> Self {
+        self.subclone_::<U>(offset, size)
+    }
+
     delegate! {
         to self.accessor {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
+            fn phys_addr(&self) -> usize;
 
             unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize);
             unsafe fn copy_from<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize);

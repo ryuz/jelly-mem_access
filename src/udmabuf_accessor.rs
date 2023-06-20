@@ -65,6 +65,10 @@ impl MemRegion for UdmabufRegion {
         }
     }
 
+    fn phys_addr(&self) -> usize {
+        self.phys_addr
+    }
+
     delegate! {
         to self.mmap_region {
             fn addr(&self) -> usize;
@@ -73,11 +77,6 @@ impl MemRegion for UdmabufRegion {
     }
 }
 
-impl MemPhysAddress for UdmabufRegion {
-    fn phys_addr(&self) -> usize {
-        self.phys_addr
-    }
-}
 
 impl Clone for UdmabufRegion {
     fn clone(&self) -> Self {
@@ -111,10 +110,6 @@ impl<U> UdmabufAccessor<U> {
                 self.mem_accessor.region().subclone(offset, size),
             ),
         }
-    }
-
-    pub fn subclone(&self, offset: usize, size: usize) -> UdmabufAccessor<U> {
-        self.subclone_::<U>(offset, size)
     }
 
     pub fn subclone8(&self, offset: usize, size: usize) -> UdmabufAccessor<u8> {
@@ -152,10 +147,15 @@ impl<U> MemAccess for UdmabufAccessor<U> {
         core::mem::size_of::<U>()
     }
 
+    fn subclone(&self, offset: usize, size: usize) -> Self {
+        self.subclone_::<U>(offset, size)
+    }
+
     delegate! {
         to self.mem_accessor {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
+            fn phys_addr(&self) -> usize;
 
             unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize);
             unsafe fn copy_from<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize);
@@ -219,10 +219,3 @@ impl<U> MemAccess for UdmabufAccessor<U> {
     }
 }
 
-impl<U> MemPhysAddress for UdmabufAccessor<U> {
-    delegate! {
-        to self.mem_accessor.region() {
-            fn phys_addr(&self) -> usize;
-        }
-    }
-}
