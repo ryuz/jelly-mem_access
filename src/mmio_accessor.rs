@@ -38,6 +38,10 @@ impl MemRegion for MmioRegion {
     fn size(&self) -> usize {
         self.size
     }
+
+    fn phys_addr(&self) -> usize {
+        self.addr()
+    }
 }
 
 impl Clone for MmioRegion {
@@ -69,10 +73,6 @@ impl<U> MmioAccessor<U> {
                 self.mem_accessor.region().subclone(offset, size),
             ),
         }
-    }
-
-    pub fn subclone(&self, offset: usize, size: usize) -> MmioAccessor<U> {
-        self.subclone_::<U>(offset, size)
     }
 
     pub fn subclone8(&self, offset: usize, size: usize) -> MmioAccessor<u8> {
@@ -110,10 +110,15 @@ impl<U> MemAccess for MmioAccessor<U> {
         core::mem::size_of::<U>()
     }
 
+    fn subclone(&self, offset: usize, size: usize) -> Self {
+        self.subclone_::<U>(offset, size)
+    }
+
     delegate! {
         to self.mem_accessor {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
+            fn phys_addr(&self) -> usize;
 
             unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize);
             unsafe fn copy_from<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize);

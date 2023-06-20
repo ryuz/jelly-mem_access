@@ -39,7 +39,7 @@ impl UioRegion {
             phys_addr: phys_addr,
         })
     }
-
+    
     pub fn set_irq_enable(&mut self, enable: bool) -> Result<(), Box<dyn Error>> {
         let data: [u8; 4] = unsafe { std::mem::transmute(if enable { 1u32 } else { 0u32 }) };
         self.mmap_region.write(&data)?;
@@ -82,6 +82,10 @@ impl MemRegion for UioRegion {
         }
     }
 
+    fn phys_addr(&self) -> usize {
+        self.phys_addr
+    }
+
     delegate! {
         to self.mmap_region {
             fn addr(&self) -> usize;
@@ -90,11 +94,6 @@ impl MemRegion for UioRegion {
     }
 }
 
-impl MemPhysAddress for UioRegion {
-    fn phys_addr(&self) -> usize {
-        self.phys_addr
-    }
-}
 
 pub struct UioAccessor<U> {
     mem_accessor: MemAccessor<UioRegion, U>,
@@ -141,10 +140,6 @@ impl<U> UioAccessor<U> {
         }
     }
 
-    pub fn subclone(&self, offset: usize, size: usize) -> UioAccessor<U> {
-        self.subclone_::<U>(offset, size)
-    }
-
     pub fn subclone8(&self, offset: usize, size: usize) -> UioAccessor<u8> {
         self.subclone_::<u8>(offset, size)
     }
@@ -178,10 +173,15 @@ impl<U> MemAccess for UioAccessor<U> {
         core::mem::size_of::<U>()
     }
 
+    fn subclone(&self, offset: usize, size: usize) -> UioAccessor<U> {
+        self.subclone_::<U>(offset, size)
+    }
+
     delegate! {
         to self.mem_accessor {
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
+            fn phys_addr(&self) -> usize;
 
             unsafe fn copy_to<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize);
             unsafe fn copy_from<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize);
@@ -241,14 +241,6 @@ impl<U> MemAccess for UioAccessor<U> {
             unsafe fn read_regi64(&self, reg: usize) -> i64;
             unsafe fn read_regf32(&self, reg: usize) -> f32;
             unsafe fn read_regf64(&self, reg: usize) -> f64;
-        }
-    }
-}
-
-impl<U> MemPhysAddress for UioAccessor<U> {
-    delegate! {
-        to self.mem_accessor.region() {
-            fn phys_addr(&self) -> usize;
         }
     }
 }
