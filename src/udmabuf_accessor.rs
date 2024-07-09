@@ -35,8 +35,8 @@ impl UdmabufRegion {
         module_name: &str,
         cache_enable: bool,
     ) -> Result<Self, Box<dyn Error>> {
-        let phys_addr = Self::read_phys_addr(device_name)?;
-        let size = Self::read_size(device_name)?;
+        let phys_addr = Self::ref_phys_addr(device_name, module_name)?;
+        let size = Self::ref_phys_size(device_name, module_name)?;
 
         let fname = format!("/dev/{}", device_name);
         let mmap_region =
@@ -71,6 +71,7 @@ impl UdmabufRegion {
         Ok(read_file_to_string(fname)?.trim().parse()?)
     }
 
+
     pub fn ref_phys_addr(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
         let fname = format!("/sys/class/{}/{}/phys_addr", module_name, device_name);
         Ok(usize::from_str_radix(
@@ -84,13 +85,6 @@ impl UdmabufRegion {
         Ok(read_file_to_string(fname)?.trim().parse()?)
     }
 
-    pub fn read_phys_addr(device_name: &str) -> Result<usize, Box<dyn Error>> {
-        Self::ref_phys_addr(device_name, "u-dma-buf")
-    }
-
-    pub fn read_size(device_name: &str) -> Result<usize, Box<dyn Error>> {
-        Self::ref_phys_size(device_name, "u-dma-buf")
-    }
 }
 
 impl MemRegion for UdmabufRegion {
@@ -136,6 +130,16 @@ impl<U> UdmabufAccessor<U> {
         Ok(Self {
             mem_accessor: MemAccessor::<UdmabufRegion, U>::new(UdmabufRegion::new(
                 device_name,
+                cache_enable,
+            )?),
+        })
+    }
+
+    pub fn new_with_module_name(device_name: &str, module_name: &str, cache_enable: bool) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            mem_accessor: MemAccessor::<UdmabufRegion, U>::new(UdmabufRegion::new_with_module_name(
+                device_name,
+                module_name,
                 cache_enable,
             )?),
         })
