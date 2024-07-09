@@ -59,7 +59,7 @@ impl UdmabufRegion {
         )?)
     }
 
-    pub fn size(&self) -> Result<usize, Box<dyn Error>> {
+    pub fn phys_size(&self) -> Result<usize, Box<dyn Error>> {
         let fname = format!("/sys/class/{}/{}/size", self.module_name, self.device_name);
         Ok(read_file_to_string(fname)?.trim().parse()?)
     }
@@ -73,7 +73,7 @@ impl UdmabufRegion {
         )?)
     }
 
-    pub fn ref_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
+    pub fn ref_phys_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
         let fname = format!("/sys/class/{}/{}/size", module_name, device_name);
         Ok(read_file_to_string(fname)?.trim().parse()?)
     }
@@ -85,7 +85,7 @@ impl UdmabufRegion {
     }
 
     pub fn read_size(device_name: &str) -> Result<usize, Box<dyn Error>> {
-        Self::ref_size(device_name, "u-dma-buf")
+        Self::ref_phys_size(device_name, "u-dma-buf")
     }
 }
 
