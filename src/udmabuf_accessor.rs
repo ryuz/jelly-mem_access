@@ -21,10 +21,16 @@ fn read_file_to_string(path: String) -> Result<String, Box<dyn Error>> {
 struct UdmabufRegion {
     mmap_region: MmapRegion,
     phys_addr: usize,
+    module_name: String, 
+    device_name: String, 
 }
 
 impl UdmabufRegion {
     pub fn new(device_name: &str, cache_enable: bool) -> Result<Self, Box<dyn Error>> {
+        Self::new_with_module_name(device_name, "u-dma-buf", cache_enable)
+    }
+
+    pub fn new_with_module_name(device_name: &str, module_name: &str, cache_enable: bool) -> Result<Self, Box<dyn Error>> {
         let phys_addr = Self::read_phys_addr(device_name)?;
         let size = Self::read_size(device_name)?;
 
@@ -35,6 +41,8 @@ impl UdmabufRegion {
         Ok(Self {
             mmap_region: mmap_region,
             phys_addr: phys_addr,
+            module_name: String::from(module_name),
+            device_name: String::from(device_name),
         })
     }
 
@@ -43,17 +51,41 @@ impl UdmabufRegion {
         Self::new(&device_name, cache_enable)
     }
 
-    pub fn read_phys_addr(device_name: &str) -> Result<usize, Box<dyn Error>> {
-        let fname = format!("/sys/class/u-dma-buf/{}/phys_addr", device_name);
+    pub fn phys_addr(&self) -> Result<usize, Box<dyn Error>> {
+        let fname = format!("/sys/class/{}/{}/phys_addr", self.module_name, self.device_name);
         Ok(usize::from_str_radix(
             &read_file_to_string(fname)?.trim()[2..],
             16,
         )?)
     }
 
-    pub fn read_size(device_name: &str) -> Result<usize, Box<dyn Error>> {
-        let fname = format!("/sys/class/u-dma-buf/{}/size", device_name);
+    pub fn size(&self) -> Result<usize, Box<dyn Error>> {
+        let fname = format!("/sys/class/{}/{}/size", self.module_name, self.device_name);
         Ok(read_file_to_string(fname)?.trim().parse()?)
+    }
+
+
+    pub fn ref_phys_addr(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
+        let fname = format!("/sys/class/{}/{}/phys_addr", module_name, device_name);
+        Ok(usize::from_str_radix(
+            &read_file_to_string(fname)?.trim()[2..],
+            16,
+        )?)
+    }
+
+    pub fn ref_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
+        let fname = format!("/sys/class/{}/{}/size", module_name, device_name);
+        Ok(read_file_to_string(fname)?.trim().parse()?)
+    }
+
+
+
+    pub fn read_phys_addr(device_name: &str) -> Result<usize, Box<dyn Error>> {
+        Self::ref_phys_addr(device_name, "u-dma-buf")
+    }
+
+    pub fn read_size(device_name: &str) -> Result<usize, Box<dyn Error>> {
+        Self::ref_size(device_name, "u-dma-buf")
     }
 }
 
@@ -62,6 +94,8 @@ impl MemRegion for UdmabufRegion {
         UdmabufRegion {
             mmap_region: self.mmap_region.subclone(offset, size),
             phys_addr: self.phys_addr + offset,
+            module_name: self.module_name.clone(),
+            device_name: self.device_name.clone(),
         }
     }
 
