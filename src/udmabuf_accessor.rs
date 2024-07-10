@@ -376,6 +376,38 @@ impl<U> UdmabufAccessor<U> {
         to self.mem_accessor.region() {
             pub fn addr(&self) -> usize;
             pub fn size(&self) -> usize;
+
+            pub fn phys_addr(&self) -> Result<usize, Box<dyn Error>>;
+            pub fn phys_size(&self) -> Result<usize, Box<dyn Error>>;
+            pub fn sync_mode(&self) -> Result<u32, Box<dyn Error>> ;
+            pub fn set_sync_mode(&self, sync_mode: u32) -> Result<(), Box<dyn Error>> ;
+            pub fn sync_offset(&self) -> Result<usize, Box<dyn Error>> ;
+            pub fn set_sync_offset(&self, sync_offset: usize) -> Result<(), Box<dyn Error>> ;
+            pub fn sync_size(&self) -> Result<usize, Box<dyn Error>> ;
+            pub fn set_sync_size(&self, sync_size: usize) -> Result<(), Box<dyn Error>> ;
+            pub fn sync_direction(&self) -> Result<u32, Box<dyn Error>> ;
+            pub fn set_sync_direction(&self, sync_size: usize) -> Result<(), Box<dyn Error>> ;
+            pub fn dma_coherent(&self) -> Result<u32, Box<dyn Error>> ;
+            pub fn sync_owner(&self) -> Result<u32, Box<dyn Error>> ;
+            pub fn set_sync_for_cpu(
+                &self,
+                sync_offset: usize,
+                sync_size: usize,
+                sync_direction: u32,
+                sync_for_cpu: u32,
+            ) -> Result<(), Box<dyn Error>> ;
+
+            pub fn set_sync_for_cpu_all(&self) -> Result<(), Box<dyn Error>> ;
+
+            pub fn set_sync_for_device(
+                &self,
+                sync_offset: usize,
+                sync_size: usize,
+                sync_direction: u32,
+                sync_for_cpu: u32,
+            ) -> Result<(), Box<dyn Error>> ;
+
+            pub fn set_sync_for_device_all(&self) -> Result<(), Box<dyn Error>> ;
         }
     }
 }
