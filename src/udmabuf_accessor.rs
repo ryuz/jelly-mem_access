@@ -5,8 +5,8 @@ use delegate::delegate;
 use std::boxed::Box;
 use std::error::Error;
 use std::format;
-use std::fs::File;
-use std::io::Read;
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
 use std::string::String;
 
 const O_SYNC: i32 = 0x101000;
@@ -16,6 +16,14 @@ fn read_file_to_string(path: String) -> Result<String, Box<dyn Error>> {
     let mut buf = String::new();
     file.read_to_string(&mut buf)?;
     Ok(buf)
+}
+
+fn write_file_from_string(path: String, text: &str) -> Result<(), Box<dyn Error>> {
+    let mut file = OpenOptions::new()
+        .write(true)
+        .open(path)?;
+    file.write_all(text.as_bytes())?;
+    Ok(())
 }
 
 struct UdmabufRegion {
@@ -35,8 +43,8 @@ impl UdmabufRegion {
         module_name: &str,
         cache_enable: bool,
     ) -> Result<Self, Box<dyn Error>> {
-        let phys_addr = Self::ref_phys_addr(device_name, module_name)?;
-        let size = Self::ref_phys_size(device_name, module_name)?;
+        let phys_addr = Self::read_phys_addr(device_name, module_name)?;
+        let size = Self::read_size(device_name, module_name)?;
 
         let fname = format!("/dev/{}", device_name);
         let mmap_region =
@@ -72,7 +80,7 @@ impl UdmabufRegion {
     }
 
 
-    pub fn ref_phys_addr(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
+    pub fn read_phys_addr(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
         let fname = format!("/sys/class/{}/{}/phys_addr", module_name, device_name);
         Ok(usize::from_str_radix(
             &read_file_to_string(fname)?.trim()[2..],
@@ -80,11 +88,26 @@ impl UdmabufRegion {
         )?)
     }
 
-    pub fn ref_phys_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
+    pub fn read_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
         let fname = format!("/sys/class/{}/{}/size", module_name, device_name);
         Ok(read_file_to_string(fname)?.trim().parse()?)
     }
 
+    pub fn write_sync_for_cpu_all(device_name: &str, module_name: &str) -> Result<(), Box<dyn Error>> {
+        let fname = format!("/sys/class/{}/{}/sync_for_cpu", module_name, device_name);
+        write_file_from_string(fname, "1")
+    }
+
+    pub fn write_sync_for_cpu(device_name: &str, module_name: &str, sync_offset : usize, sync_size: usize, sync_direction: u32, sync_for_cpu u32) -> Result<(), Box<dyn Error>> {
+        let fname = format!("/sys/class/{}/{}/sync_for_cpu", module_name, device_name);
+        let text = format!("0x%08X%08X", (sync_offset & 0xFFFFFFFF), (sync_size & 0xFFFFFFF0) | (sync_direction << 2) | sync_for_cpu);
+        write_file_from_string(fname, text)
+    }
+
+    if ((fd  = open("/sys/class/uiomem/uiomem0/sync_for_cpu", O_WRONLY)) != -1) {
+        sprintf(attr, "0x%08X%08X", (sync_offset & 0xFFFFFFFF), (sync_size & 0xFFFFFFF0) | (sync_direction << 2) | sync_for_cpu);
+        write(fd, attr, strlen(attr));
+        close(fd);
 }
 
 impl MemRegion for UdmabufRegion {
@@ -213,31 +236,31 @@ impl<U> MemAccess for UdmabufAccessor<U> {
             fn phys_addr(&self) -> usize;
 
             unsafe fn copy_to_usize(&self, src_adr: usize, dst_ptr: *mut usize, count: usize);
-            unsafe fn copy_to_u8   (&self, src_adr: usize, dst_ptr: *mut u8   , count: usize);
-            unsafe fn copy_to_u16  (&self, src_adr: usize, dst_ptr: *mut u16  , count: usize);
-            unsafe fn copy_to_u32  (&self, src_adr: usize, dst_ptr: *mut u32  , count: usize);
-            unsafe fn copy_to_u64  (&self, src_adr: usize, dst_ptr: *mut u64  , count: usize);
+            unsafe fn copy_to_u8(&self, src_adr: usize, dst_ptr: *mut u8, count: usize);
+            unsafe fn copy_to_u16(&self, src_adr: usize, dst_ptr: *mut u16, count: usize);
+            unsafe fn copy_to_u32(&self, src_adr: usize, dst_ptr: *mut u32, count: usize);
+            unsafe fn copy_to_u64(&self, src_adr: usize, dst_ptr: *mut u64, count: usize);
             unsafe fn copy_to_isize(&self, src_adr: usize, dst_ptr: *mut isize, count: usize);
-            unsafe fn copy_to_i8   (&self, src_adr: usize, dst_ptr: *mut i8   , count: usize);
-            unsafe fn copy_to_i16  (&self, src_adr: usize, dst_ptr: *mut i16  , count: usize);
-            unsafe fn copy_to_i32  (&self, src_adr: usize, dst_ptr: *mut i32  , count: usize);
-            unsafe fn copy_to_i64  (&self, src_adr: usize, dst_ptr: *mut i64  , count: usize);
-            unsafe fn copy_to_f32  (&self, src_adr: usize, dst_ptr: *mut f32  , count: usize);
-            unsafe fn copy_to_f64  (&self, src_adr: usize, dst_ptr: *mut f64  , count: usize);
+            unsafe fn copy_to_i8(&self, src_adr: usize, dst_ptr: *mut i8, count: usize);
+            unsafe fn copy_to_i16(&self, src_adr: usize, dst_ptr: *mut i16, count: usize);
+            unsafe fn copy_to_i32(&self, src_adr: usize, dst_ptr: *mut i32, count: usize);
+            unsafe fn copy_to_i64(&self, src_adr: usize, dst_ptr: *mut i64, count: usize);
+            unsafe fn copy_to_f32(&self, src_adr: usize, dst_ptr: *mut f32, count: usize);
+            unsafe fn copy_to_f64(&self, src_adr: usize, dst_ptr: *mut f64, count: usize);
 
             unsafe fn copy_from_usize(&self, src_ptr: *const usize, dst_adr: usize, count: usize);
-            unsafe fn copy_from_u8   (&self, src_ptr: *const u8   , dst_adr: usize, count: usize);
-            unsafe fn copy_from_u16  (&self, src_ptr: *const u16  , dst_adr: usize, count: usize);
-            unsafe fn copy_from_u32  (&self, src_ptr: *const u32  , dst_adr: usize, count: usize);
-            unsafe fn copy_from_u64  (&self, src_ptr: *const u64  , dst_adr: usize, count: usize);
+            unsafe fn copy_from_u8(&self, src_ptr: *const u8, dst_adr: usize, count: usize);
+            unsafe fn copy_from_u16(&self, src_ptr: *const u16, dst_adr: usize, count: usize);
+            unsafe fn copy_from_u32(&self, src_ptr: *const u32, dst_adr: usize, count: usize);
+            unsafe fn copy_from_u64(&self, src_ptr: *const u64, dst_adr: usize, count: usize);
             unsafe fn copy_from_isize(&self, src_ptr: *const isize, dst_adr: usize, count: usize);
-            unsafe fn copy_from_i8   (&self, src_ptr: *const i8   , dst_adr: usize, count: usize);
-            unsafe fn copy_from_i16  (&self, src_ptr: *const i16  , dst_adr: usize, count: usize);
-            unsafe fn copy_from_i32  (&self, src_ptr: *const i32  , dst_adr: usize, count: usize);
-            unsafe fn copy_from_i64  (&self, src_ptr: *const i64  , dst_adr: usize, count: usize);
-            unsafe fn copy_from_f32  (&self, src_ptr: *const f32  , dst_adr: usize, count: usize);
-            unsafe fn copy_from_f64  (&self, src_ptr: *const f64  , dst_adr: usize, count: usize);
-
+            unsafe fn copy_from_i8(&self, src_ptr: *const i8, dst_adr: usize, count: usize);
+            unsafe fn copy_from_i16(&self, src_ptr: *const i16, dst_adr: usize, count: usize);
+            unsafe fn copy_from_i32(&self, src_ptr: *const i32, dst_adr: usize, count: usize);
+            unsafe fn copy_from_i64(&self, src_ptr: *const i64, dst_adr: usize, count: usize);
+            unsafe fn copy_from_f32(&self, src_ptr: *const f32, dst_adr: usize, count: usize);
+            unsafe fn copy_from_f64(&self, src_ptr: *const f64, dst_adr: usize, count: usize);
+            
             unsafe fn write_mem(&self, offset: usize, data: usize);
             unsafe fn write_mem_usize(&self, offset: usize, data: usize);
             unsafe fn write_mem_u8(&self, offset: usize, data: u8);
