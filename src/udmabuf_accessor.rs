@@ -109,7 +109,7 @@ impl UdmabufRegion {
         Self::read_sync_owner(&self.device_name, &self.module_name)
     }
 
-    pub fn set_sync_for_cpu(
+    pub fn sync_for_cpu(
         &self,
         sync_offset: usize,
         sync_size: usize,
@@ -126,16 +126,16 @@ impl UdmabufRegion {
         )
     }
 
-    pub fn set_sync_for_cpu_all(&self) -> Result<(), Box<dyn Error>> {
+    pub fn sync_for_cpu_all(&self) -> Result<(), Box<dyn Error>> {
         Self::write_sync_for_cpu_all(&self.device_name, &self.module_name)
     }
 
-    pub fn set_sync_for_device(
+    pub fn sync_for_device(
         &self,
         sync_offset: usize,
         sync_size: usize,
         sync_direction: u32,
-        sync_for_cpu: u32,
+        sync_for_device: u32,
     ) -> Result<(), Box<dyn Error>> {
         Self::write_sync_for_device(
             &self.device_name,
@@ -143,11 +143,11 @@ impl UdmabufRegion {
             sync_offset,
             sync_size,
             sync_direction,
-            sync_for_cpu,
+            sync_for_device,
         )
     }
 
-    pub fn set_sync_for_device_all(&self) -> Result<(), Box<dyn Error>> {
+    pub fn sync_for_device_all(&self) -> Result<(), Box<dyn Error>> {
         Self::write_sync_for_device_all(&self.device_name, &self.module_name)
     }
 
@@ -268,13 +268,13 @@ impl UdmabufRegion {
         sync_offset: usize,
         sync_size: usize,
         sync_direction: u32,
-        sync_for_cpu: u32,
+        sync_for_device: u32,
     ) -> Result<(), Box<dyn Error>> {
         let fname = format!("/sys/class/{}/{}/sync_for_device", module_name, device_name);
         let text = format!(
             "0x{:08X}{:08X}",
             (sync_offset & 0xFFFFFFFF) as u32,
-            (sync_size & 0xFFFFFFF0) as u32 | (sync_direction << 2) | sync_for_cpu
+            (sync_size & 0xFFFFFFF0) as u32 | (sync_direction << 2) | sync_for_device
         );
         write_file_from_string(fname, text.as_str())
     }
@@ -389,7 +389,7 @@ impl<U> UdmabufAccessor<U> {
             pub fn set_sync_direction(&self, sync_size: usize) -> Result<(), Box<dyn Error>> ;
             pub fn dma_coherent(&self) -> Result<u32, Box<dyn Error>> ;
             pub fn sync_owner(&self) -> Result<u32, Box<dyn Error>> ;
-            pub fn set_sync_for_cpu(
+            pub fn sync_for_cpu(
                 &self,
                 sync_offset: usize,
                 sync_size: usize,
@@ -397,9 +397,8 @@ impl<U> UdmabufAccessor<U> {
                 sync_for_cpu: u32,
             ) -> Result<(), Box<dyn Error>> ;
 
-            pub fn set_sync_for_cpu_all(&self) -> Result<(), Box<dyn Error>> ;
-
-            pub fn set_sync_for_device(
+            pub fn sync_for_cpu_all(&self) -> Result<(), Box<dyn Error>> ;
+            pub fn sync_for_device(
                 &self,
                 sync_offset: usize,
                 sync_size: usize,
@@ -407,7 +406,7 @@ impl<U> UdmabufAccessor<U> {
                 sync_for_cpu: u32,
             ) -> Result<(), Box<dyn Error>> ;
 
-            pub fn set_sync_for_device_all(&self) -> Result<(), Box<dyn Error>> ;
+            pub fn sync_for_device_all(&self) -> Result<(), Box<dyn Error>> ;
         }
     }
 }
@@ -441,8 +440,31 @@ impl<U> MemAccessBase for UdmabufAccessor<U> {
 }
 
 impl<U> MemAccess for UdmabufAccessor<U> {
+    unsafe fn cache_flush(&self, offset: usize, size: usize) {
+        self.mem_accessor
+            .region()
+            .sync_for_device(offset, size, 0, 1)
+            .unwrap();
+    }
+
+    unsafe fn cache_flush_all(&self) {
+        self.mem_accessor.region().sync_for_device_all().unwrap();
+    }
+
+    unsafe fn cache_invalidate(&self, offset: usize, size: usize) {
+        self.mem_accessor
+            .region()
+            .sync_for_cpu(offset, size, 0, 1)
+            .unwrap();
+    }
+
+    unsafe fn cache_invalidate_all(&self) {
+        self.mem_accessor.region().sync_for_cpu_all().unwrap();
+    }
+
     delegate! {
         to self.mem_accessor {
+
             fn addr(&self) -> usize;
             fn size(&self) -> usize;
             fn phys_addr(&self) -> usize;

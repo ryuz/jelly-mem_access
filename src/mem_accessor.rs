@@ -110,6 +110,11 @@ pub trait MemAccess {
     unsafe fn read_reg_i64(&self, reg: usize) -> i64;
     unsafe fn read_reg_f32(&self, reg: usize) -> f32;
     unsafe fn read_reg_f64(&self, reg: usize) -> f64;
+
+    unsafe fn cache_flush(&self, offset: usize, size: usize);
+    unsafe fn cache_flush_all(&self);
+    unsafe fn cache_invalidate(&self, offset: usize, size: usize);
+    unsafe fn cache_invalidate_all(&self);
 }
 
 pub struct MemAccessor<T: MemRegion, U> {
@@ -518,4 +523,9 @@ impl<T: MemRegion, U> MemAccess for MemAccessor<T, U> {
     unsafe fn read_reg_f64(&self, reg: usize) -> f64 {
         self.read_reg_::<f64>(reg)
     }
+
+    unsafe fn cache_flush(&self, _offset: usize, _size: usize) {}
+    unsafe fn cache_flush_all(&self) {}
+    unsafe fn cache_invalidate(&self, _offset: usize, _size: usize) {}
+    unsafe fn cache_invalidate_all(&self) {}
 }
