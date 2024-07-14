@@ -109,14 +109,18 @@ impl UdmabufRegion {
         Self::read_sync_owner(&self.device_name, &self.module_name)
     }
 
-    pub fn sync_for_cpu(
+    pub fn sync_for_cpu(&self) -> Result<(), Box<dyn Error>> {
+        Self::write_sync_for_cpu(&self.device_name, &self.module_name)
+    }
+
+    pub fn sync_for_cpu_with_range(
         &self,
         sync_offset: usize,
         sync_size: usize,
         sync_direction: u32,
         sync_for_cpu: u32,
     ) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_for_cpu(
+        Self::write_sync_for_cpu_with_range(
             &self.device_name,
             &self.module_name,
             sync_offset,
@@ -126,18 +130,18 @@ impl UdmabufRegion {
         )
     }
 
-    pub fn sync_for_cpu_all(&self) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_for_cpu_all(&self.device_name, &self.module_name)
+    pub fn sync_for_device(&self) -> Result<(), Box<dyn Error>> {
+        Self::write_sync_for_device(&self.device_name, &self.module_name)
     }
 
-    pub fn sync_for_device(
+    pub fn sync_for_device_with_range(
         &self,
         sync_offset: usize,
         sync_size: usize,
         sync_direction: u32,
         sync_for_device: u32,
     ) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_for_device(
+        Self::write_sync_for_device_with_range(
             &self.device_name,
             &self.module_name,
             sync_offset,
@@ -147,9 +151,6 @@ impl UdmabufRegion {
         )
     }
 
-    pub fn sync_for_device_all(&self) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_for_device_all(&self.device_name, &self.module_name)
-    }
 
     pub fn read_phys_addr(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
         let fname = format!("/sys/class/{}/{}/phys_addr", module_name, device_name);
@@ -240,6 +241,14 @@ impl UdmabufRegion {
     pub fn write_sync_for_cpu(
         device_name: &str,
         module_name: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        let fname = format!("/sys/class/{}/{}/sync_for_cpu", module_name, device_name);
+        write_file_from_string(fname, "1")
+    }
+
+    pub fn write_sync_for_cpu_with_range(
+        device_name: &str,
+        module_name: &str,
         sync_offset: usize,
         sync_size: usize,
         sync_direction: u32,
@@ -254,15 +263,15 @@ impl UdmabufRegion {
         write_file_from_string(fname, text.as_str())
     }
 
-    pub fn write_sync_for_cpu_all(
+    pub fn write_sync_for_device(
         device_name: &str,
         module_name: &str,
     ) -> Result<(), Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_for_cpu", module_name, device_name);
+        let fname = format!("/sys/class/{}/{}/sync_for_device", module_name, device_name);
         write_file_from_string(fname, "1")
     }
 
-    pub fn write_sync_for_device(
+    pub fn write_sync_for_device_with_range(
         device_name: &str,
         module_name: &str,
         sync_offset: usize,
@@ -277,14 +286,6 @@ impl UdmabufRegion {
             (sync_size & 0xFFFFFFF0) as u32 | (sync_direction << 2) | sync_for_device
         );
         write_file_from_string(fname, text.as_str())
-    }
-
-    pub fn write_sync_for_device_all(
-        device_name: &str,
-        module_name: &str,
-    ) -> Result<(), Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_for_device", module_name, device_name);
-        write_file_from_string(fname, "1")
     }
 }
 
@@ -389,7 +390,8 @@ impl<U> UdmabufAccessor<U> {
             pub fn set_sync_direction(&self, sync_size: usize) -> Result<(), Box<dyn Error>> ;
             pub fn dma_coherent(&self) -> Result<u32, Box<dyn Error>> ;
             pub fn sync_owner(&self) -> Result<u32, Box<dyn Error>> ;
-            pub fn sync_for_cpu(
+            pub fn sync_for_cpu(&self) -> Result<(), Box<dyn Error>> ;
+            pub fn sync_for_cpu_with_range(
                 &self,
                 sync_offset: usize,
                 sync_size: usize,
@@ -397,8 +399,8 @@ impl<U> UdmabufAccessor<U> {
                 sync_for_cpu: u32,
             ) -> Result<(), Box<dyn Error>> ;
 
-            pub fn sync_for_cpu_all(&self) -> Result<(), Box<dyn Error>> ;
-            pub fn sync_for_device(
+            pub fn sync_for_device(&self) -> Result<(), Box<dyn Error>> ;
+            pub fn sync_for_device_with_range(
                 &self,
                 sync_offset: usize,
                 sync_size: usize,
@@ -406,7 +408,6 @@ impl<U> UdmabufAccessor<U> {
                 sync_for_cpu: u32,
             ) -> Result<(), Box<dyn Error>> ;
 
-            pub fn sync_for_device_all(&self) -> Result<(), Box<dyn Error>> ;
         }
     }
 }
@@ -440,28 +441,6 @@ impl<U> MemAccessBase for UdmabufAccessor<U> {
 }
 
 impl<U> MemAccess for UdmabufAccessor<U> {
-    unsafe fn cache_flush(&self, offset: usize, size: usize) {
-        self.mem_accessor
-            .region()
-            .sync_for_device(offset, size, 0, 1)
-            .unwrap();
-    }
-
-    unsafe fn cache_flush_all(&self) {
-        self.mem_accessor.region().sync_for_device_all().unwrap();
-    }
-
-    unsafe fn cache_invalidate(&self, offset: usize, size: usize) {
-        self.mem_accessor
-            .region()
-            .sync_for_cpu(offset, size, 0, 1)
-            .unwrap();
-    }
-
-    unsafe fn cache_invalidate_all(&self) {
-        self.mem_accessor.region().sync_for_cpu_all().unwrap();
-    }
-
     delegate! {
         to self.mem_accessor {
 
@@ -551,5 +530,37 @@ impl<U> MemAccess for UdmabufAccessor<U> {
             unsafe fn read_reg_f32(&self, reg: usize) -> f32;
             unsafe fn read_reg_f64(&self, reg: usize) -> f64;
         }
+    }
+}
+
+
+impl<U> MemAccessSync for UdmabufAccessor<U> {
+    unsafe fn sync_owner(&self) -> u32 {
+        self.mem_accessor
+        .region()
+        .sync_owner()
+        .unwrap()
+    }
+
+    unsafe fn sync_for_cpu(&self) {
+        self.mem_accessor.region().sync_for_cpu().unwrap();
+    }
+
+    unsafe fn sync_for_cpu_with_range(&self, sync_offset: usize, sync_size: usize, sync_direction: u32, sync_for_cpu: u32) {
+        self.mem_accessor
+            .region()
+            .sync_for_cpu_with_range(sync_offset, sync_size, sync_direction, sync_for_cpu)
+            .unwrap();
+    }
+        
+    unsafe fn sync_for_device(&self) {
+        self.mem_accessor.region().sync_for_device().unwrap();
+    }
+
+    unsafe fn sync_for_device_with_range(&self, sync_offset: usize, sync_size: usize, sync_direction: u32, sync_for_device: u32) {
+        self.mem_accessor
+            .region()
+            .sync_for_device_with_range(sync_offset, sync_size, sync_direction, sync_for_device)
+            .unwrap()
     }
 }

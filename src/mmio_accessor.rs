@@ -215,11 +215,6 @@ impl<U> MemAccess for MmioAccessor<U> {
             unsafe fn read_reg_i64(&self, reg: usize) -> i64;
             unsafe fn read_reg_f32(&self, reg: usize) -> f32;
             unsafe fn read_reg_f64(&self, reg: usize) -> f64;
-
-            unsafe fn cache_flush(&self, _offset: usize, _size: usize);
-            unsafe fn cache_flush_all(&self);
-            unsafe fn cache_invalidate(&self, _offset: usize, _size: usize);
-            unsafe fn cache_invalidate_all(&self);
         }
     }
 }
