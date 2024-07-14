@@ -389,6 +389,7 @@ impl<U> UdmabufAccessor<U> {
             pub fn sync_direction(&self) -> Result<u32, Box<dyn Error>> ;
             pub fn set_sync_direction(&self, sync_size: usize) -> Result<(), Box<dyn Error>> ;
             pub fn dma_coherent(&self) -> Result<u32, Box<dyn Error>> ;
+            /*
             pub fn sync_owner(&self) -> Result<u32, Box<dyn Error>> ;
             pub fn sync_for_cpu(&self) -> Result<(), Box<dyn Error>> ;
             pub fn sync_for_cpu_with_range(
@@ -407,7 +408,7 @@ impl<U> UdmabufAccessor<U> {
                 sync_direction: u32,
                 sync_for_cpu: u32,
             ) -> Result<(), Box<dyn Error>> ;
-
+            */
         }
     }
 }
@@ -543,14 +544,14 @@ impl<U> MemAccessSync for UdmabufAccessor<U> {
     }
 
     unsafe fn sync_for_cpu(&self) {
-        self.mem_accessor.region().sync_for_cpu().unwrap();
+        self.mem_accessor.region().sync_for_cpu().unwrap()
     }
 
     unsafe fn sync_for_cpu_with_range(&self, sync_offset: usize, sync_size: usize, sync_direction: u32, sync_for_cpu: u32) {
         self.mem_accessor
             .region()
             .sync_for_cpu_with_range(sync_offset, sync_size, sync_direction, sync_for_cpu)
-            .unwrap();
+            .unwrap()
     }
         
     unsafe fn sync_for_device(&self) {
