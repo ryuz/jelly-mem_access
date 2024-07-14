@@ -151,7 +151,6 @@ impl UdmabufRegion {
         )
     }
 
-
     pub fn read_phys_addr(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
         let fname = format!("/sys/class/{}/{}/phys_addr", module_name, device_name);
         Ok(usize::from_str_radix(
@@ -380,6 +379,7 @@ impl<U> UdmabufAccessor<U> {
 
             pub fn phys_addr(&self) -> Result<usize, Box<dyn Error>>;
             pub fn phys_size(&self) -> Result<usize, Box<dyn Error>>;
+            /*
             pub fn sync_mode(&self) -> Result<u32, Box<dyn Error>> ;
             pub fn set_sync_mode(&self, sync_mode: u32) -> Result<(), Box<dyn Error>> ;
             pub fn sync_offset(&self) -> Result<usize, Box<dyn Error>> ;
@@ -389,7 +389,6 @@ impl<U> UdmabufAccessor<U> {
             pub fn sync_direction(&self) -> Result<u32, Box<dyn Error>> ;
             pub fn set_sync_direction(&self, sync_size: usize) -> Result<(), Box<dyn Error>> ;
             pub fn dma_coherent(&self) -> Result<u32, Box<dyn Error>> ;
-            /*
             pub fn sync_owner(&self) -> Result<u32, Box<dyn Error>> ;
             pub fn sync_for_cpu(&self) -> Result<(), Box<dyn Error>> ;
             pub fn sync_for_cpu_with_range(
