@@ -11,13 +11,14 @@ use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 use std::num::NonZeroUsize;
 use std::os::unix::fs::OpenOptionsExt;
-use std::os::unix::prelude::AsRawFd;
 use std::string::String;
 use std::sync::{Arc, RwLock};
+use core::ptr::NonNull;
+use core::ffi::c_void;
 
 struct MmapFile {
     file: File,
-    addr: *mut libc::c_void,
+    addr: NonNull<c_void>,
     size: usize,
 }
 
@@ -41,7 +42,7 @@ impl MmapFile {
                 NonZeroUsize::new(size).unwrap(),
                 ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
                 MapFlags::MAP_SHARED,
-                file.as_raw_fd(),
+                &file,
                 0 as libc::off_t,
             )?;
 
@@ -54,7 +55,7 @@ impl MmapFile {
     }
 
     pub fn addr(&self) -> usize {
-        self.addr as usize
+        self.addr.as_ptr() as usize
     }
 
     pub fn size(&self) -> usize {
