@@ -11,6 +11,12 @@ use std::string::String;
 
 const O_SYNC: i32 = 0x101000;
 
+
+
+// -----------------------------
+//  Static API
+// -----------------------------
+
 fn read_file_to_string(path: String) -> Result<String, Box<dyn Error>> {
     let mut file = File::open(path)?;
     let mut buf = String::new();
@@ -23,6 +29,149 @@ fn write_file_from_string(path: String, text: &str) -> Result<(), Box<dyn Error>
     file.write_all(text.as_bytes())?;
     Ok(())
 }
+
+
+pub fn read_phys_addr(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/phys_addr", module_name, device_name);
+    Ok(usize::from_str_radix(
+        &read_file_to_string(fname)?.trim()[2..],
+        16,
+    )?)
+}
+
+pub fn read_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/size", module_name, device_name);
+    Ok(read_file_to_string(fname)?.trim().parse()?)
+}
+
+pub fn read_sync_mode(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_mode", module_name, device_name);
+    Ok(read_file_to_string(fname)?.trim().parse()?)
+}
+
+pub fn write_sync_mode(
+    device_name: &str,
+    module_name: &str,
+    sync_mode: u32,
+) -> Result<(), Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_mode", module_name, device_name);
+    let text = format!("{}", sync_mode);
+    write_file_from_string(fname, text.as_str())
+}
+
+pub fn read_sync_offset(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_offset", module_name, device_name);
+    Ok(read_file_to_string(fname)?.trim().parse()?)
+}
+
+pub fn write_sync_offset(
+    device_name: &str,
+    module_name: &str,
+    sync_offset: usize,
+) -> Result<(), Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_offset", module_name, device_name);
+    let text = format!("{}", sync_offset);
+    write_file_from_string(fname, text.as_str())
+}
+
+pub fn read_sync_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_size", module_name, device_name);
+    Ok(read_file_to_string(fname)?.trim().parse()?)
+}
+
+pub fn write_sync_size(
+    device_name: &str,
+    module_name: &str,
+    sync_size: usize,
+) -> Result<(), Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_size", module_name, device_name);
+    let text = format!("{}", sync_size);
+    write_file_from_string(fname, text.as_str())
+}
+
+pub fn read_sync_direction(
+    device_name: &str,
+    module_name: &str,
+) -> Result<u32, Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_direction", module_name, device_name);
+    Ok(read_file_to_string(fname)?.trim().parse()?)
+}
+
+pub fn write_sync_directione(
+    device_name: &str,
+    module_name: &str,
+    sync_size: usize,
+) -> Result<(), Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_direction", module_name, device_name);
+    let text = format!("{}", sync_size);
+    write_file_from_string(fname, text.as_str())
+}
+
+pub fn read_dma_coherent(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/dma_coherent", module_name, device_name);
+    Ok(read_file_to_string(fname)?.trim().parse()?)
+}
+
+pub fn read_sync_owner(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_owner", module_name, device_name);
+    Ok(read_file_to_string(fname)?.trim().parse()?)
+}
+
+pub fn write_sync_for_cpu(
+    device_name: &str,
+    module_name: &str,
+) -> Result<(), Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_for_cpu", module_name, device_name);
+    write_file_from_string(fname, "1")
+}
+
+pub fn write_sync_for_cpu_with_range(
+    device_name: &str,
+    module_name: &str,
+    sync_offset: usize,
+    sync_size: usize,
+    sync_direction: u32,
+    sync_for_cpu: u32,
+) -> Result<(), Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_for_cpu", module_name, device_name);
+    let text = format!(
+        "0x{:08X}{:08X}",
+        (sync_offset & 0xFFFFFFFF) as u32,
+        (sync_size & 0xFFFFFFF0) as u32 | (sync_direction << 2) | sync_for_cpu
+    );
+    write_file_from_string(fname, text.as_str())
+}
+
+pub fn write_sync_for_device(
+    device_name: &str,
+    module_name: &str,
+) -> Result<(), Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_for_device", module_name, device_name);
+    write_file_from_string(fname, "1")
+}
+
+pub fn write_sync_for_device_with_range(
+    device_name: &str,
+    module_name: &str,
+    sync_offset: usize,
+    sync_size: usize,
+    sync_direction: u32,
+    sync_for_device: u32,
+) -> Result<(), Box<dyn Error>> {
+    let fname = format!("/sys/class/{}/{}/sync_for_device", module_name, device_name);
+    let text = format!(
+        "0x{:08X}{:08X}",
+        (sync_offset & 0xFFFFFFFF) as u32,
+        (sync_size & 0xFFFFFFF0) as u32 | (sync_direction << 2) | sync_for_device
+    );
+    write_file_from_string(fname, text.as_str())
+}
+
+
+
+// -----------------------------
+//  Udmabuf
+// -----------------------------
 
 struct UdmabufRegion {
     mmap_region: MmapRegion,
@@ -41,8 +190,8 @@ impl UdmabufRegion {
         module_name: &str,
         cache_enable: bool,
     ) -> Result<Self, Box<dyn Error>> {
-        let phys_addr = Self::read_phys_addr(device_name, module_name)?;
-        let size = Self::read_size(device_name, module_name)?;
+        let phys_addr = read_phys_addr(device_name, module_name)?;
+        let size = read_size(device_name, module_name)?;
 
         let fname = format!("/dev/{}", device_name);
         let mmap_region =
@@ -61,66 +210,66 @@ impl UdmabufRegion {
         Self::new(&device_name, cache_enable)
     }
 
-    pub fn phys_addr(&self) -> Result<usize, Box<dyn Error>> {
-        Self::read_phys_addr(&self.device_name, &self.module_name)
+    pub fn read_phys_addr(&self) -> Result<usize, Box<dyn Error>> {
+        read_phys_addr(&self.device_name, &self.module_name)
     }
 
-    pub fn phys_size(&self) -> Result<usize, Box<dyn Error>> {
-        Self::read_size(&self.device_name, &self.module_name)
+    pub fn read_phys_size(&self) -> Result<usize, Box<dyn Error>> {
+        read_size(&self.device_name, &self.module_name)
     }
 
-    pub fn sync_mode(&self) -> Result<u32, Box<dyn Error>> {
-        Self::read_sync_mode(&self.device_name, &self.module_name)
+    pub fn read_sync_mode(&self) -> Result<u32, Box<dyn Error>> {
+        read_sync_mode(&self.device_name, &self.module_name)
     }
 
-    pub fn set_sync_mode(&self, sync_mode: u32) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_mode(&self.device_name, &self.module_name, sync_mode)
+    pub fn write_sync_mode(&self, sync_mode: u32) -> Result<(), Box<dyn Error>> {
+        write_sync_mode(&self.device_name, &self.module_name, sync_mode)
     }
 
-    pub fn sync_offset(&self) -> Result<usize, Box<dyn Error>> {
-        Self::read_sync_offset(&self.device_name, &self.module_name)
+    pub fn read_sync_offset(&self) -> Result<usize, Box<dyn Error>> {
+        read_sync_offset(&self.device_name, &self.module_name)
     }
 
-    pub fn set_sync_offset(&self, sync_offset: usize) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_offset(&self.device_name, &self.module_name, sync_offset)
+    pub fn write_sync_offset(&self, sync_offset: usize) -> Result<(), Box<dyn Error>> {
+        write_sync_offset(&self.device_name, &self.module_name, sync_offset)
     }
 
-    pub fn sync_size(&self) -> Result<usize, Box<dyn Error>> {
-        Self::read_sync_size(&self.device_name, &self.module_name)
+    pub fn read_sync_size(&self) -> Result<usize, Box<dyn Error>> {
+        read_sync_size(&self.device_name, &self.module_name)
     }
 
-    pub fn set_sync_size(&self, sync_size: usize) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_size(&self.device_name, &self.module_name, sync_size)
+    pub fn write_sync_size(&self, sync_size: usize) -> Result<(), Box<dyn Error>> {
+        write_sync_size(&self.device_name, &self.module_name, sync_size)
     }
 
-    pub fn sync_direction(&self) -> Result<u32, Box<dyn Error>> {
-        Self::read_sync_direction(&self.device_name, &self.module_name)
+    pub fn read_sync_direction(&self) -> Result<u32, Box<dyn Error>> {
+        read_sync_direction(&self.device_name, &self.module_name)
     }
 
-    pub fn set_sync_direction(&self, sync_size: usize) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_directione(&self.device_name, &self.module_name, sync_size)
+    pub fn write_sync_direction(&self, sync_size: usize) -> Result<(), Box<dyn Error>> {
+        write_sync_directione(&self.device_name, &self.module_name, sync_size)
     }
 
-    pub fn dma_coherent(&self) -> Result<u32, Box<dyn Error>> {
-        Self::read_dma_coherent(&self.device_name, &self.module_name)
+    pub fn read_dma_coherent(&self) -> Result<u32, Box<dyn Error>> {
+        read_dma_coherent(&self.device_name, &self.module_name)
     }
 
-    pub fn sync_owner(&self) -> Result<u32, Box<dyn Error>> {
-        Self::read_sync_owner(&self.device_name, &self.module_name)
+    pub fn read_sync_owner(&self) -> Result<u32, Box<dyn Error>> {
+        read_sync_owner(&self.device_name, &self.module_name)
     }
 
-    pub fn sync_for_cpu(&self) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_for_cpu(&self.device_name, &self.module_name)
+    pub fn write_sync_for_cpu(&self) -> Result<(), Box<dyn Error>> {
+        write_sync_for_cpu(&self.device_name, &self.module_name)
     }
 
-    pub fn sync_for_cpu_with_range(
+    pub fn write_sync_for_cpu_with_range(
         &self,
         sync_offset: usize,
         sync_size: usize,
         sync_direction: u32,
         sync_for_cpu: u32,
     ) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_for_cpu_with_range(
+        write_sync_for_cpu_with_range(
             &self.device_name,
             &self.module_name,
             sync_offset,
@@ -130,18 +279,18 @@ impl UdmabufRegion {
         )
     }
 
-    pub fn sync_for_device(&self) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_for_device(&self.device_name, &self.module_name)
+    pub fn write_sync_for_device(&self) -> Result<(), Box<dyn Error>> {
+        write_sync_for_device(&self.device_name, &self.module_name)
     }
 
-    pub fn sync_for_device_with_range(
+    pub fn write_sync_for_device_with_range(
         &self,
         sync_offset: usize,
         sync_size: usize,
         sync_direction: u32,
         sync_for_device: u32,
     ) -> Result<(), Box<dyn Error>> {
-        Self::write_sync_for_device_with_range(
+        write_sync_for_device_with_range(
             &self.device_name,
             &self.module_name,
             sync_offset,
@@ -151,141 +300,6 @@ impl UdmabufRegion {
         )
     }
 
-    pub fn read_phys_addr(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/phys_addr", module_name, device_name);
-        Ok(usize::from_str_radix(
-            &read_file_to_string(fname)?.trim()[2..],
-            16,
-        )?)
-    }
-
-    pub fn read_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/size", module_name, device_name);
-        Ok(read_file_to_string(fname)?.trim().parse()?)
-    }
-
-    pub fn read_sync_mode(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_mode", module_name, device_name);
-        Ok(read_file_to_string(fname)?.trim().parse()?)
-    }
-
-    pub fn write_sync_mode(
-        device_name: &str,
-        module_name: &str,
-        sync_mode: u32,
-    ) -> Result<(), Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_mode", module_name, device_name);
-        let text = format!("{}", sync_mode);
-        write_file_from_string(fname, text.as_str())
-    }
-
-    pub fn read_sync_offset(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_offset", module_name, device_name);
-        Ok(read_file_to_string(fname)?.trim().parse()?)
-    }
-
-    pub fn write_sync_offset(
-        device_name: &str,
-        module_name: &str,
-        sync_offset: usize,
-    ) -> Result<(), Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_offset", module_name, device_name);
-        let text = format!("{}", sync_offset);
-        write_file_from_string(fname, text.as_str())
-    }
-
-    pub fn read_sync_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_size", module_name, device_name);
-        Ok(read_file_to_string(fname)?.trim().parse()?)
-    }
-
-    pub fn write_sync_size(
-        device_name: &str,
-        module_name: &str,
-        sync_size: usize,
-    ) -> Result<(), Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_size", module_name, device_name);
-        let text = format!("{}", sync_size);
-        write_file_from_string(fname, text.as_str())
-    }
-
-    pub fn read_sync_direction(
-        device_name: &str,
-        module_name: &str,
-    ) -> Result<u32, Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_direction", module_name, device_name);
-        Ok(read_file_to_string(fname)?.trim().parse()?)
-    }
-
-    pub fn write_sync_directione(
-        device_name: &str,
-        module_name: &str,
-        sync_size: usize,
-    ) -> Result<(), Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_direction", module_name, device_name);
-        let text = format!("{}", sync_size);
-        write_file_from_string(fname, text.as_str())
-    }
-
-    pub fn read_dma_coherent(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/dma_coherent", module_name, device_name);
-        Ok(read_file_to_string(fname)?.trim().parse()?)
-    }
-
-    pub fn read_sync_owner(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_owner", module_name, device_name);
-        Ok(read_file_to_string(fname)?.trim().parse()?)
-    }
-
-    pub fn write_sync_for_cpu(
-        device_name: &str,
-        module_name: &str,
-    ) -> Result<(), Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_for_cpu", module_name, device_name);
-        write_file_from_string(fname, "1")
-    }
-
-    pub fn write_sync_for_cpu_with_range(
-        device_name: &str,
-        module_name: &str,
-        sync_offset: usize,
-        sync_size: usize,
-        sync_direction: u32,
-        sync_for_cpu: u32,
-    ) -> Result<(), Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_for_cpu", module_name, device_name);
-        let text = format!(
-            "0x{:08X}{:08X}",
-            (sync_offset & 0xFFFFFFFF) as u32,
-            (sync_size & 0xFFFFFFF0) as u32 | (sync_direction << 2) | sync_for_cpu
-        );
-        write_file_from_string(fname, text.as_str())
-    }
-
-    pub fn write_sync_for_device(
-        device_name: &str,
-        module_name: &str,
-    ) -> Result<(), Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_for_device", module_name, device_name);
-        write_file_from_string(fname, "1")
-    }
-
-    pub fn write_sync_for_device_with_range(
-        device_name: &str,
-        module_name: &str,
-        sync_offset: usize,
-        sync_size: usize,
-        sync_direction: u32,
-        sync_for_device: u32,
-    ) -> Result<(), Box<dyn Error>> {
-        let fname = format!("/sys/class/{}/{}/sync_for_device", module_name, device_name);
-        let text = format!(
-            "0x{:08X}{:08X}",
-            (sync_offset & 0xFFFFFFFF) as u32,
-            (sync_size & 0xFFFFFFF0) as u32 | (sync_direction << 2) | sync_for_device
-        );
-        write_file_from_string(fname, text.as_str())
-    }
 }
 
 impl MemRegion for UdmabufRegion {
@@ -377,21 +391,20 @@ impl<U> UdmabufAccessor<U> {
             pub fn addr(&self) -> usize;
             pub fn size(&self) -> usize;
 
-            pub fn phys_addr(&self) -> Result<usize, Box<dyn Error>>;
-            pub fn phys_size(&self) -> Result<usize, Box<dyn Error>>;
-            /*
-            pub fn sync_mode(&self) -> Result<u32, Box<dyn Error>> ;
-            pub fn set_sync_mode(&self, sync_mode: u32) -> Result<(), Box<dyn Error>> ;
-            pub fn sync_offset(&self) -> Result<usize, Box<dyn Error>> ;
-            pub fn set_sync_offset(&self, sync_offset: usize) -> Result<(), Box<dyn Error>> ;
-            pub fn sync_size(&self) -> Result<usize, Box<dyn Error>> ;
-            pub fn set_sync_size(&self, sync_size: usize) -> Result<(), Box<dyn Error>> ;
-            pub fn sync_direction(&self) -> Result<u32, Box<dyn Error>> ;
-            pub fn set_sync_direction(&self, sync_size: usize) -> Result<(), Box<dyn Error>> ;
-            pub fn dma_coherent(&self) -> Result<u32, Box<dyn Error>> ;
-            pub fn sync_owner(&self) -> Result<u32, Box<dyn Error>> ;
-            pub fn sync_for_cpu(&self) -> Result<(), Box<dyn Error>> ;
-            pub fn sync_for_cpu_with_range(
+            pub fn read_phys_addr(&self) -> Result<usize, Box<dyn Error>>;
+            pub fn read_phys_size(&self) -> Result<usize, Box<dyn Error>>;
+            pub fn read_sync_mode(&self) -> Result<u32, Box<dyn Error>> ;
+            pub fn write_sync_mode(&self, sync_mode: u32) -> Result<(), Box<dyn Error>> ;
+            pub fn read_sync_offset(&self) -> Result<usize, Box<dyn Error>> ;
+            pub fn write_sync_offset(&self, sync_offset: usize) -> Result<(), Box<dyn Error>> ;
+            pub fn read_sync_size(&self) -> Result<usize, Box<dyn Error>> ;
+            pub fn write_sync_size(&self, sync_size: usize) -> Result<(), Box<dyn Error>> ;
+            pub fn read_sync_direction(&self) -> Result<u32, Box<dyn Error>> ;
+            pub fn write_sync_direction(&self, sync_size: usize) -> Result<(), Box<dyn Error>> ;
+            pub fn read_dma_coherent(&self) -> Result<u32, Box<dyn Error>> ;
+            pub fn read_sync_owner(&self) -> Result<u32, Box<dyn Error>> ;
+            pub fn write_sync_for_cpu(&self) -> Result<(), Box<dyn Error>> ;
+            pub fn write_sync_for_cpu_with_range(
                 &self,
                 sync_offset: usize,
                 sync_size: usize,
@@ -399,15 +412,14 @@ impl<U> UdmabufAccessor<U> {
                 sync_for_cpu: u32,
             ) -> Result<(), Box<dyn Error>> ;
 
-            pub fn sync_for_device(&self) -> Result<(), Box<dyn Error>> ;
-            pub fn sync_for_device_with_range(
+            pub fn write_sync_for_device(&self) -> Result<(), Box<dyn Error>> ;
+            pub fn write_sync_for_device_with_range(
                 &self,
                 sync_offset: usize,
                 sync_size: usize,
                 sync_direction: u32,
                 sync_for_cpu: u32,
             ) -> Result<(), Box<dyn Error>> ;
-            */
         }
     }
 }
@@ -538,29 +550,29 @@ impl<U> MemAccessSync for UdmabufAccessor<U> {
     unsafe fn sync_owner(&self) -> u32 {
         self.mem_accessor
         .region()
-        .sync_owner()
+        .read_sync_owner()
         .unwrap()
     }
 
     unsafe fn sync_for_cpu(&self) {
-        self.mem_accessor.region().sync_for_cpu().unwrap()
+        self.mem_accessor.region().write_sync_for_cpu().unwrap()
     }
 
     unsafe fn sync_for_cpu_with_range(&self, sync_offset: usize, sync_size: usize, sync_direction: u32, sync_for_cpu: u32) {
         self.mem_accessor
             .region()
-            .sync_for_cpu_with_range(sync_offset, sync_size, sync_direction, sync_for_cpu)
+            .write_sync_for_cpu_with_range(sync_offset, sync_size, sync_direction, sync_for_cpu)
             .unwrap()
     }
         
     unsafe fn sync_for_device(&self) {
-        self.mem_accessor.region().sync_for_device().unwrap();
+        self.mem_accessor.region().write_sync_for_device().unwrap();
     }
 
     unsafe fn sync_for_device_with_range(&self, sync_offset: usize, sync_size: usize, sync_direction: u32, sync_for_device: u32) {
         self.mem_accessor
             .region()
-            .sync_for_device_with_range(sync_offset, sync_size, sync_direction, sync_for_device)
+            .write_sync_for_device_with_range(sync_offset, sync_size, sync_direction, sync_for_device)
             .unwrap()
     }
 }
