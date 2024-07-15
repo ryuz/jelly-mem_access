@@ -38,16 +38,16 @@ mod tests {
         let mut buf: [u64; 4] = [0; 4];
         let mmio = MmioAccessor::<RegisterWordSize>::new(&mut buf as *mut u64 as usize, 32);
         unsafe {
-            mmio.write_mem8(0x00, 0x12);
-            mmio.write_mem8(0x01, 0x34);
-            mmio.write_mem16(0x02, 0x4444);
-            mmio.write_mem32(0x04, 0x87654321);
-            mmio.write_mem64(0x08, 0x0123456789abcdef);
-            assert_eq!(mmio.read_mem8(0x00), 0x12);
-            assert_eq!(mmio.read_mem8(0x01), 0x34);
-            assert_eq!(mmio.read_mem16(0x02), 0x4444);
-            assert_eq!(mmio.read_mem32(0x04), 0x87654321);
-            assert_eq!(mmio.read_mem64(0x08), 0x0123456789abcdef);
+            mmio.write_mem_u8(0x00, 0x12);
+            mmio.write_mem_u8(0x01, 0x34);
+            mmio.write_mem_u16(0x02, 0x4444);
+            mmio.write_mem_u32(0x04, 0x87654321);
+            mmio.write_mem_u64(0x08, 0x0123456789abcdef);
+            assert_eq!(mmio.read_mem_u8(0x00), 0x12);
+            assert_eq!(mmio.read_mem_u8(0x01), 0x34);
+            assert_eq!(mmio.read_mem_u16(0x02), 0x4444);
+            assert_eq!(mmio.read_mem_u32(0x04), 0x87654321);
+            assert_eq!(mmio.read_mem_u64(0x08), 0x0123456789abcdef);
         }
     }
 

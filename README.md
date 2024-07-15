@@ -25,10 +25,10 @@ MMIO access in bare-metal programming can be written as follows:
 ```rust
     type RegisterWordSize = u64;
     let mmio_acc = MmioAccessor::<RegisterWordSize>::new(0xffff0000, 0x10000);
-    mmio_acc.write_mem8 (0x00, 0x12);       // addr : 0xffff0000
-    mmio_acc.write_mem16(0x02, 0x1234);     // addr : 0xffff0002
-    mmio_acc.write_reg32(0x10, 0x12345678); // addr : 0xffff0080 <= 0x10 * size_of<RegisterWordSize>()
-    mmio_acc.read_reg32(0x10);              // addr : 0xffff0080 <= 0x10 * size_of<RegisterWordSize>()
+    mmio_acc.write_mem_u8(0x00, 0x12);        // addr : 0xffff0000
+    mmio_acc.write_mem_u16(0x02, 0x1234);     // addr : 0xffff0002
+    mmio_acc.write_reg_u32(0x10, 0x12345678); // addr : 0xffff0080 <= 0x10 * size_of<RegisterWordSize>()
+    mmio_acc.read_reg_u32(0x10);              // addr : 0xffff0080 <= 0x10 * size_of<RegisterWordSize>()
 ```
 
 
@@ -41,7 +41,7 @@ UIO access in Linux programming can be written as follows:
     let uio_num = 1;  // ex.) /dev/uio1
     let uio_acc = MmioAccessor::<RegisterWordSize>::new(uio_num);
     uio_acc.set_irq_enable(true);
-    uio_acc.write_reg32(0x00, 0x1);
+    uio_acc.write_reg_u32(0x00, 0x1);
     uio_acc.wait_irq();
 ```
 
@@ -60,5 +60,5 @@ You can also open it by specifying a name obtained from /sys/class/uio:
     let udmabuf_acc = UdmabufAccessor::<usize>::new("udmabuf4", false).unwrap();
     println!("udmabuf4 phys addr : 0x{:x}", udmabuf_acc.phys_addr());
     println!("udmabuf4 size      : 0x{:x}", udmabuf_acc.size());
-    udmabuf_acc.write_mem32(0x00, 0x1234);
+    udmabuf_acc.write_mem_u32(0x00, 0x1234);
 ```
