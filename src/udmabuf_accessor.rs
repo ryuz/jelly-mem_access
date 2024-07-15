@@ -11,8 +11,6 @@ use std::string::String;
 
 const O_SYNC: i32 = 0x101000;
 
-
-
 // -----------------------------
 //  Static API
 // -----------------------------
@@ -29,7 +27,6 @@ fn write_file_from_string(path: String, text: &str) -> Result<(), Box<dyn Error>
     file.write_all(text.as_bytes())?;
     Ok(())
 }
-
 
 pub fn read_phys_addr(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/phys_addr", module_name, device_name);
@@ -89,10 +86,7 @@ pub fn write_sync_size(
     write_file_from_string(fname, text.as_str())
 }
 
-pub fn read_sync_direction(
-    device_name: &str,
-    module_name: &str,
-) -> Result<u32, Box<dyn Error>> {
+pub fn read_sync_direction(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_direction", module_name, device_name);
     Ok(read_file_to_string(fname)?.trim().parse()?)
 }
@@ -117,10 +111,7 @@ pub fn read_sync_owner(device_name: &str, module_name: &str) -> Result<u32, Box<
     Ok(read_file_to_string(fname)?.trim().parse()?)
 }
 
-pub fn write_sync_for_cpu(
-    device_name: &str,
-    module_name: &str,
-) -> Result<(), Box<dyn Error>> {
+pub fn write_sync_for_cpu(device_name: &str, module_name: &str) -> Result<(), Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_for_cpu", module_name, device_name);
     write_file_from_string(fname, "1")
 }
@@ -142,10 +133,7 @@ pub fn write_sync_for_cpu_with_range(
     write_file_from_string(fname, text.as_str())
 }
 
-pub fn write_sync_for_device(
-    device_name: &str,
-    module_name: &str,
-) -> Result<(), Box<dyn Error>> {
+pub fn write_sync_for_device(device_name: &str, module_name: &str) -> Result<(), Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_for_device", module_name, device_name);
     write_file_from_string(fname, "1")
 }
@@ -166,8 +154,6 @@ pub fn write_sync_for_device_with_range(
     );
     write_file_from_string(fname, text.as_str())
 }
-
-
 
 // -----------------------------
 //  Udmabuf
@@ -299,7 +285,6 @@ impl UdmabufRegion {
             sync_for_device,
         )
     }
-
 }
 
 impl MemRegion for UdmabufRegion {
@@ -545,34 +530,47 @@ impl<U> MemAccess for UdmabufAccessor<U> {
     }
 }
 
-
 impl<U> MemAccessSync for UdmabufAccessor<U> {
     unsafe fn sync_owner(&self) -> u32 {
-        self.mem_accessor
-        .region()
-        .read_sync_owner()
-        .unwrap()
+        self.mem_accessor.region().read_sync_owner().unwrap()
     }
 
     unsafe fn sync_for_cpu(&self) {
         self.mem_accessor.region().write_sync_for_cpu().unwrap()
     }
 
-    unsafe fn sync_for_cpu_with_range(&self, sync_offset: usize, sync_size: usize, sync_direction: u32, sync_for_cpu: u32) {
+    unsafe fn sync_for_cpu_with_range(
+        &self,
+        sync_offset: usize,
+        sync_size: usize,
+        sync_direction: u32,
+        sync_for_cpu: u32,
+    ) {
         self.mem_accessor
             .region()
             .write_sync_for_cpu_with_range(sync_offset, sync_size, sync_direction, sync_for_cpu)
             .unwrap()
     }
-        
+
     unsafe fn sync_for_device(&self) {
         self.mem_accessor.region().write_sync_for_device().unwrap();
     }
 
-    unsafe fn sync_for_device_with_range(&self, sync_offset: usize, sync_size: usize, sync_direction: u32, sync_for_device: u32) {
+    unsafe fn sync_for_device_with_range(
+        &self,
+        sync_offset: usize,
+        sync_size: usize,
+        sync_direction: u32,
+        sync_for_device: u32,
+    ) {
         self.mem_accessor
             .region()
-            .write_sync_for_device_with_range(sync_offset, sync_size, sync_direction, sync_for_device)
+            .write_sync_for_device_with_range(
+                sync_offset,
+                sync_size,
+                sync_direction,
+                sync_for_device,
+            )
             .unwrap()
     }
 }

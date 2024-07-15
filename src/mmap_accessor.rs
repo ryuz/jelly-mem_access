@@ -3,6 +3,8 @@
 use super::*;
 use delegate::delegate;
 
+use core::ffi::c_void;
+use core::ptr::NonNull;
 use libc;
 use nix::sys::mman::{MapFlags, ProtFlags};
 use std::boxed::Box;
@@ -13,8 +15,6 @@ use std::num::NonZeroUsize;
 use std::os::unix::fs::OpenOptionsExt;
 use std::string::String;
 use std::sync::{Arc, RwLock};
-use core::ptr::NonNull;
-use core::ffi::c_void;
 
 struct MmapFile {
     file: File,
