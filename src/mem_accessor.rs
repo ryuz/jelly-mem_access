@@ -122,11 +122,22 @@ pub trait MemAccessCache {
 pub trait MemAccessSync {
     unsafe fn sync_owner(&self) -> u32;
     unsafe fn sync_for_cpu(&self);
-    unsafe fn sync_for_cpu_with_range(&self, sync_offset: usize, sync_size: usize, sync_direction: u32, sync_for_cpu: u32);
+    unsafe fn sync_for_cpu_with_range(
+        &self,
+        sync_offset: usize,
+        sync_size: usize,
+        sync_direction: u32,
+        sync_for_cpu: u32,
+    );
     unsafe fn sync_for_device(&self);
-    unsafe fn sync_for_device_with_range(&self, sync_offset: usize, sync_size: usize, sync_direction: u32, sync_for_device: u32);
+    unsafe fn sync_for_device_with_range(
+        &self,
+        sync_offset: usize,
+        sync_size: usize,
+        sync_direction: u32,
+        sync_for_device: u32,
+    );
 }
-
 
 pub struct MemAccessor<T: MemRegion, U> {
     region: T,
