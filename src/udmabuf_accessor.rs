@@ -181,7 +181,7 @@ impl UdmabufRegion {
 
         let fname = format!("/dev/{}", device_name);
         let mmap_region =
-            MmapRegion::new_with_flag(fname, size, if cache_enable { 0 } else { O_SYNC })?;
+            MmapRegion::new_with_flag(fname, 0, size, if cache_enable { 0 } else { O_SYNC })?;
 
         Ok(Self {
             mmap_region: mmap_region,

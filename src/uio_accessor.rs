@@ -35,7 +35,7 @@ impl UioRegion {
         let size = Self::read_size(uio_num)?;
         let fname = format!("/dev/uio{}", uio_num);
         Ok(UioRegion {
-            mmap_region: MmapRegion::new(fname, size)?,
+            mmap_region: MmapRegion::new(fname, 0, size)?,
             phys_addr: phys_addr,
         })
     }
