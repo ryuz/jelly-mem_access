@@ -62,3 +62,10 @@ You can also open it by specifying a name obtained from /sys/class/uio:
     println!("udmabuf4 size      : 0x{:x}", udmabuf_acc.size());
     udmabuf_acc.write_mem_u32(0x00, 0x1234);
 ```
+
+## /dev/mem
+
+```rust
+    let mem_acc = MmapAccessor::<usize>::new("/dev/mem", 0xa0000000, 0x1000).unwrap();
+    mem_acc.write_reg_u32(0x10, 0x12345678);
+```

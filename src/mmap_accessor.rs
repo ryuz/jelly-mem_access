@@ -29,7 +29,12 @@ impl MmapFile {
         Self::new_with_flag(path, offset, size, 0)
     }
 
-    pub fn new_with_flag(path: &str, offset: usize, size: usize, flag: i32) -> Result<Self, Box<dyn Error>> {
+    pub fn new_with_flag(
+        path: &str,
+        offset: usize,
+        size: usize,
+        flag: i32,
+    ) -> Result<Self, Box<dyn Error>> {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -95,7 +100,12 @@ impl MmapRegion {
         Self::new_with_flag(&path, offset, size, 0)
     }
 
-    pub fn new_with_flag(path: &str, offset: usize, size: usize, flag: i32) -> Result<Self, Box<dyn Error>> {
+    pub fn new_with_flag(
+        path: &str,
+        offset: usize,
+        size: usize,
+        flag: i32,
+    ) -> Result<Self, Box<dyn Error>> {
         let mfile = MmapFile::new_with_flag(&path, offset, size, flag)?;
         let addr = mfile.addr();
         let size = mfile.size();
