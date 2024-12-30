@@ -39,7 +39,7 @@ UIO access in Linux programming can be written as follows:
 ```rust
     type RegisterWordSize = usize;
     let uio_num = 1;  // ex.) /dev/uio1
-    let uio_acc = MmioAccessor::<RegisterWordSize>::new(uio_num);
+    let uio_acc = UioAccessor::<RegisterWordSize>::new(uio_num);
     uio_acc.set_irq_enable(true);
     uio_acc.write_reg_u32(0x00, 0x1);
     uio_acc.wait_irq();
@@ -48,7 +48,7 @@ UIO access in Linux programming can be written as follows:
 You can also open it by specifying a name obtained from /sys/class/uio:
 
 ```rust
-    let uio_acc = MmioAccessor::<u32>::new_with_name("uio-sample");
+    let uio_acc = UioAccessor::<u32>::new_with_name("uio-sample");
 ```
 
 ## u-dma-buf
@@ -61,4 +61,11 @@ You can also open it by specifying a name obtained from /sys/class/uio:
     println!("udmabuf4 phys addr : 0x{:x}", udmabuf_acc.phys_addr());
     println!("udmabuf4 size      : 0x{:x}", udmabuf_acc.size());
     udmabuf_acc.write_mem_u32(0x00, 0x1234);
+```
+
+## /dev/mem
+
+```rust
+    let mem_acc = MmapAccessor::<usize>::new("/dev/mem", 0xa0000000, 0x1000).unwrap();
+    mem_acc.write_reg_u32(0x10, 0x12345678);
 ```

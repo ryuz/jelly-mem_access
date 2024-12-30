@@ -13,7 +13,6 @@ use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 use std::num::NonZeroUsize;
 use std::os::unix::fs::OpenOptionsExt;
-use std::string::String;
 use std::sync::{Arc, RwLock};
 
 struct MmapFile {
@@ -26,16 +25,21 @@ unsafe impl Sync for MmapFile {}
 unsafe impl Send for MmapFile {}
 
 impl MmapFile {
-    pub fn new(path: String, size: usize) -> Result<Self, Box<dyn Error>> {
-        Self::new_with_flag(path, size, 0)
+    pub fn new(path: &str, offset: usize, size: usize) -> Result<Self, Box<dyn Error>> {
+        Self::new_with_flag(path, offset, size, 0)
     }
 
-    pub fn new_with_flag(path: String, size: usize, flag: i32) -> Result<Self, Box<dyn Error>> {
+    pub fn new_with_flag(
+        path: &str,
+        offset: usize,
+        size: usize,
+        flag: i32,
+    ) -> Result<Self, Box<dyn Error>> {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
             .custom_flags(flag)
-            .open(path)?;
+            .open(&path)?;
         unsafe {
             let addr = nix::sys::mman::mmap(
                 None,
@@ -43,7 +47,7 @@ impl MmapFile {
                 ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
                 MapFlags::MAP_SHARED,
                 &file,
-                0 as libc::off_t,
+                offset as libc::off_t,
             )?;
 
             Ok(MmapFile {
@@ -92,12 +96,17 @@ pub struct MmapRegion {
 }
 
 impl MmapRegion {
-    pub fn new(path: String, size: usize) -> Result<Self, Box<dyn Error>> {
-        Self::new_with_flag(path, size, 0)
+    pub fn new(path: &str, offset: usize, size: usize) -> Result<Self, Box<dyn Error>> {
+        Self::new_with_flag(&path, offset, size, 0)
     }
 
-    pub fn new_with_flag(path: String, size: usize, flag: i32) -> Result<Self, Box<dyn Error>> {
-        let mfile = MmapFile::new_with_flag(path, size, flag)?;
+    pub fn new_with_flag(
+        path: &str,
+        offset: usize,
+        size: usize,
+        flag: i32,
+    ) -> Result<Self, Box<dyn Error>> {
+        let mfile = MmapFile::new_with_flag(&path, offset, size, flag)?;
         let addr = mfile.addr();
         let size = mfile.size();
         Ok(Self {
@@ -160,9 +169,9 @@ impl<U> From<MmapAccessor<U>> for MemAccessor<MmapRegion, U> {
 }
 
 impl<U> MmapAccessor<U> {
-    pub fn new(path: String, size: usize) -> Result<Self, Box<dyn Error>> {
+    pub fn new(path: &str, offset: usize, size: usize) -> Result<Self, Box<dyn Error>> {
         Ok(Self {
-            accessor: MemAccessor::<MmapRegion, U>::new(MmapRegion::new(path, size)?),
+            accessor: MemAccessor::<MmapRegion, U>::new(MmapRegion::new(path, offset, size)?),
         })
     }
 

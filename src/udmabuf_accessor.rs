@@ -15,15 +15,15 @@ const O_SYNC: i32 = 0x101000;
 //  Static API
 // -----------------------------
 
-fn read_file_to_string(path: String) -> Result<String, Box<dyn Error>> {
-    let mut file = File::open(path)?;
+fn read_file_to_string(path: &str) -> Result<String, Box<dyn Error>> {
+    let mut file = File::open(&path)?;
     let mut buf = String::new();
     file.read_to_string(&mut buf)?;
     Ok(buf)
 }
 
-fn write_file_from_string(path: String, text: &str) -> Result<(), Box<dyn Error>> {
-    let mut file = OpenOptions::new().write(true).open(path)?;
+fn write_file_from_string(path: &str, text: &str) -> Result<(), Box<dyn Error>> {
+    let mut file = OpenOptions::new().write(true).open(&path)?;
     file.write_all(text.as_bytes())?;
     Ok(())
 }
@@ -31,19 +31,19 @@ fn write_file_from_string(path: String, text: &str) -> Result<(), Box<dyn Error>
 pub fn read_phys_addr(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/phys_addr", module_name, device_name);
     Ok(usize::from_str_radix(
-        &read_file_to_string(fname)?.trim()[2..],
+        &read_file_to_string(&fname)?.trim()[2..],
         16,
     )?)
 }
 
 pub fn read_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/size", module_name, device_name);
-    Ok(read_file_to_string(fname)?.trim().parse()?)
+    Ok(read_file_to_string(&fname)?.trim().parse()?)
 }
 
 pub fn read_sync_mode(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_mode", module_name, device_name);
-    Ok(read_file_to_string(fname)?.trim().parse()?)
+    Ok(read_file_to_string(&fname)?.trim().parse()?)
 }
 
 pub fn write_sync_mode(
@@ -53,12 +53,12 @@ pub fn write_sync_mode(
 ) -> Result<(), Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_mode", module_name, device_name);
     let text = format!("{}", sync_mode);
-    write_file_from_string(fname, text.as_str())
+    write_file_from_string(&fname, text.as_str())
 }
 
 pub fn read_sync_offset(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_offset", module_name, device_name);
-    Ok(read_file_to_string(fname)?.trim().parse()?)
+    Ok(read_file_to_string(&fname)?.trim().parse()?)
 }
 
 pub fn write_sync_offset(
@@ -68,12 +68,12 @@ pub fn write_sync_offset(
 ) -> Result<(), Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_offset", module_name, device_name);
     let text = format!("{}", sync_offset);
-    write_file_from_string(fname, text.as_str())
+    write_file_from_string(&fname, text.as_str())
 }
 
 pub fn read_sync_size(device_name: &str, module_name: &str) -> Result<usize, Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_size", module_name, device_name);
-    Ok(read_file_to_string(fname)?.trim().parse()?)
+    Ok(read_file_to_string(&fname)?.trim().parse()?)
 }
 
 pub fn write_sync_size(
@@ -83,12 +83,12 @@ pub fn write_sync_size(
 ) -> Result<(), Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_size", module_name, device_name);
     let text = format!("{}", sync_size);
-    write_file_from_string(fname, text.as_str())
+    write_file_from_string(&fname, text.as_str())
 }
 
 pub fn read_sync_direction(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_direction", module_name, device_name);
-    Ok(read_file_to_string(fname)?.trim().parse()?)
+    Ok(read_file_to_string(&fname)?.trim().parse()?)
 }
 
 pub fn write_sync_directione(
@@ -98,22 +98,22 @@ pub fn write_sync_directione(
 ) -> Result<(), Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_direction", module_name, device_name);
     let text = format!("{}", sync_size);
-    write_file_from_string(fname, text.as_str())
+    write_file_from_string(&fname, text.as_str())
 }
 
 pub fn read_dma_coherent(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/dma_coherent", module_name, device_name);
-    Ok(read_file_to_string(fname)?.trim().parse()?)
+    Ok(read_file_to_string(&fname)?.trim().parse()?)
 }
 
 pub fn read_sync_owner(device_name: &str, module_name: &str) -> Result<u32, Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_owner", module_name, device_name);
-    Ok(read_file_to_string(fname)?.trim().parse()?)
+    Ok(read_file_to_string(&fname)?.trim().parse()?)
 }
 
 pub fn write_sync_for_cpu(device_name: &str, module_name: &str) -> Result<(), Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_for_cpu", module_name, device_name);
-    write_file_from_string(fname, "1")
+    write_file_from_string(&fname, "1")
 }
 
 pub fn write_sync_for_cpu_with_range(
@@ -130,12 +130,12 @@ pub fn write_sync_for_cpu_with_range(
         (sync_offset & 0xFFFFFFFF) as u32,
         (sync_size & 0xFFFFFFF0) as u32 | (sync_direction << 2) | sync_for_cpu
     );
-    write_file_from_string(fname, text.as_str())
+    write_file_from_string(&fname, text.as_str())
 }
 
 pub fn write_sync_for_device(device_name: &str, module_name: &str) -> Result<(), Box<dyn Error>> {
     let fname = format!("/sys/class/{}/{}/sync_for_device", module_name, device_name);
-    write_file_from_string(fname, "1")
+    write_file_from_string(&fname, "1")
 }
 
 pub fn write_sync_for_device_with_range(
@@ -152,7 +152,7 @@ pub fn write_sync_for_device_with_range(
         (sync_offset & 0xFFFFFFFF) as u32,
         (sync_size & 0xFFFFFFF0) as u32 | (sync_direction << 2) | sync_for_device
     );
-    write_file_from_string(fname, text.as_str())
+    write_file_from_string(&fname, text.as_str())
 }
 
 // -----------------------------
@@ -181,7 +181,7 @@ impl UdmabufRegion {
 
         let fname = format!("/dev/{}", device_name);
         let mmap_region =
-            MmapRegion::new_with_flag(fname, size, if cache_enable { 0 } else { O_SYNC })?;
+            MmapRegion::new_with_flag(&fname, 0, size, if cache_enable { 0 } else { O_SYNC })?;
 
         Ok(Self {
             mmap_region: mmap_region,
