@@ -139,6 +139,7 @@ pub trait MemAccessSync {
     );
 }
 
+#[derive(Debug)]
 pub struct MemAccessor<T: MemRegion, U> {
     region: T,
     phantom: PhantomData<U>,

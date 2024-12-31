@@ -15,6 +15,7 @@ use std::num::NonZeroUsize;
 use std::os::unix::fs::OpenOptionsExt;
 use std::sync::{Arc, RwLock};
 
+#[derive(Debug)]
 struct MmapFile {
     file: File,
     addr: NonNull<c_void>,
@@ -89,6 +90,7 @@ impl Drop for MmapFile {
     }
 }
 
+#[derive(Debug)]
 pub struct MmapRegion {
     mfile: Arc<RwLock<MmapFile>>,
     addr: usize,
@@ -158,6 +160,7 @@ impl Clone for MmapRegion {
     }
 }
 
+#[derive(Debug)]
 pub struct MmapAccessor<U> {
     accessor: MemAccessor<MmapRegion, U>,
 }
