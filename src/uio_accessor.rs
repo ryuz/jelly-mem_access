@@ -17,7 +17,7 @@ enum UioAccessorError {
     UioError(String),
 }
 
-fn read_file_to_string(path: String) -> Result<String, Box<dyn Error>> {
+fn read_file_to_string(path: &str) -> Result<String, Box<dyn Error>> {
     let mut file = File::open(path)?;
     let mut buf = String::new();
     file.read_to_string(&mut buf)?;
@@ -36,7 +36,7 @@ impl UioRegion {
         let size = Self::read_size(uio_num)?;
         let fname = format!("/dev/uio{}", uio_num);
         Ok(UioRegion {
-            mmap_region: MmapRegion::new(fname, 0, size)?,
+            mmap_region: MmapRegion::new(&fname, 0, size)?,
             phys_addr: phys_addr,
         })
     }
@@ -55,13 +55,13 @@ impl UioRegion {
 
     pub fn read_name(uio_num: usize) -> Result<String, Box<dyn Error>> {
         let fname = format!("/sys/class/uio/uio{}/name", uio_num);
-        Ok(read_file_to_string(fname)?.trim().to_string())
+        Ok(read_file_to_string(&fname)?.trim().to_string())
     }
 
     pub fn read_size(uio_num: usize) -> Result<usize, Box<dyn Error>> {
         let fname = format!("/sys/class/uio/uio{}/maps/map0/size", uio_num);
         Ok(usize::from_str_radix(
-            &read_file_to_string(fname)?.trim()[2..],
+            &read_file_to_string(&fname)?.trim()[2..],
             16,
         )?)
     }
@@ -69,7 +69,7 @@ impl UioRegion {
     pub fn read_phys_addr(uio_num: usize) -> Result<usize, Box<dyn Error>> {
         let fname = format!("/sys/class/uio/uio{}/maps/map0/addr", uio_num);
         Ok(usize::from_str_radix(
-            &read_file_to_string(fname)?.trim()[2..],
+            &read_file_to_string(&fname)?.trim()[2..],
             16,
         )?)
     }
