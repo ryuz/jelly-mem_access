@@ -1,6 +1,6 @@
 [package]
 name = "jelly-mem_access"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Ryuz <ryufuchi@gmail.com>"]
 edition = "2021"
 repository = "https://github.com/ryuz/jelly-mem_access"
