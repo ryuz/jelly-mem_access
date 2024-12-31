@@ -159,6 +159,7 @@ pub fn write_sync_for_device_with_range(
 //  Udmabuf
 // -----------------------------
 
+#[derive(Debug)]
 struct UdmabufRegion {
     mmap_region: MmapRegion,
     phys_addr: usize,
@@ -315,6 +316,7 @@ impl Clone for UdmabufRegion {
     }
 }
 
+#[derive(Debug)]
 pub struct UdmabufAccessor<U> {
     mem_accessor: MemAccessor<UdmabufRegion, U>,
 }

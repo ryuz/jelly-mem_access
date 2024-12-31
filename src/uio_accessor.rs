@@ -24,6 +24,7 @@ fn read_file_to_string(path: String) -> Result<String, Box<dyn Error>> {
     Ok(buf)
 }
 
+#[derive(Debug)]
 pub struct UioRegion {
     mmap_region: MmapRegion,
     phys_addr: usize,
@@ -94,6 +95,7 @@ impl MemRegion for UioRegion {
     }
 }
 
+#[derive(Debug)]
 pub struct UioAccessor<U> {
     mem_accessor: MemAccessor<UioRegion, U>,
 }

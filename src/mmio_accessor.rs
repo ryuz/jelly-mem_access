@@ -4,6 +4,7 @@ use super::*;
 use delegate::delegate;
 
 // for Memory mapped IO
+#[derive(Debug)]
 pub struct MmioRegion {
     addr: usize,
     size: usize,
@@ -50,6 +51,7 @@ impl Clone for MmioRegion {
     }
 }
 
+#[derive(Debug)]
 pub struct MmioAccessor<U> {
     mem_accessor: MemAccessor<MmioRegion, U>,
 }

@@ -4,6 +4,7 @@ use super::*;
 use delegate::delegate;
 
 // Memory mapped IO for Physical Address
+#[derive(Debug)]
 pub struct PhysRegion<const ADDR: usize, const SIZE: usize> {}
 
 impl<const ADDR: usize, const SIZE: usize> PhysRegion<ADDR, SIZE> {
@@ -38,6 +39,7 @@ impl<const ADDR: usize, const SIZE: usize> Clone for PhysRegion<ADDR, SIZE> {
     }
 }
 
+#[derive(Debug)]
 pub struct PhysAccessor<U, const ADDR: usize, const SIZE: usize> {
     mem_accessor: MemAccessor<PhysRegion<ADDR, SIZE>, U>,
 }
