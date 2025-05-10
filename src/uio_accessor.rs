@@ -47,10 +47,11 @@ impl UioRegion {
         Ok(())
     }
 
-    pub fn wait_irq(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn wait_irq(&mut self) -> Result<u32, Box<dyn Error>> {
         let mut buf: [u8; 4] = [0; 4];
         self.mmap_region.read(&mut buf)?;
-        Ok(())
+        let count = u32::from_ne_bytes(buf);
+        Ok(count)
     }
 
     pub fn read_name(uio_num: usize) -> Result<String, Box<dyn Error>> {
@@ -164,7 +165,7 @@ impl<U> UioAccessor<U> {
         }
         to self.mem_accessor.region_mut() {
             pub fn set_irq_enable(&mut self, enable: bool) -> Result<(), Box<dyn Error>>;
-            pub fn wait_irq(&mut self) -> Result<(), Box<dyn Error>>;
+            pub fn wait_irq(&mut self) -> Result<u32, Box<dyn Error>>;
         }
     }
 }
