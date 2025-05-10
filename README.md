@@ -11,11 +11,19 @@
 
 ## Overview
 
-This library is designed for accessing memory-mapped I/O.
+The `jelly-mem_access` library provides a unified interface for accessing memory-mapped I/O (MMIO) in both bare-metal and Linux environments. It is designed to simplify register access and memory operations, supporting a wide range of use cases, including:
 
-It assists with register access using UIO (User Space I/O) and offers bare-metal access with no_std.
+- **Bare-metal programming**: Direct MMIO access with `no_std` support.
+- **Linux UIO (Userspace I/O)**: Easy integration with `/dev/uio` devices for user-space interrupt handling and memory access.
+- **u-dma-buf**: Efficient DMA buffer management using the [u-dma-buf](https://github.com/ikwzm/udmabuf/) kernel module.
 
-It also assists access using [u-dma-buf](https://github.com/ikwzm/udmabuf/).
+### Key Features
+- **Cross-platform support**: Works in both bare-metal and Linux environments.
+- **Flexible memory access**: Provides APIs for reading and writing registers of various sizes (e.g., u8, u16, u32, u64).
+- **Interrupt handling**: Simplifies UIO interrupt management in Linux.
+- **DMA buffer support**: Seamless integration with `u-dma-buf` for high-performance data transfer.
+
+This library is ideal for embedded systems developers and those working with custom hardware requiring efficient memory-mapped I/O access.
 
 
 ## MMIO(Memory Mapped I/O)
@@ -39,16 +47,17 @@ UIO access in Linux programming can be written as follows:
 ```rust
     type RegisterWordSize = usize;
     let uio_num = 1;  // ex.) /dev/uio1
-    let uio_acc = UioAccessor::<RegisterWordSize>::new(uio_num);
-    uio_acc.set_irq_enable(true);
-    uio_acc.write_reg_u32(0x00, 0x1);
-    uio_acc.wait_irq();
+    let uio_acc = UioAccessor::<RegisterWordSize>::new(uio_num).unwrap();
+    uio_acc.set_irq_enable(true).unwrap();
+    uio_acc.write_reg_u32(0x00, 0x1).unwrap();
+    let irq_count = uio_acc.wait_irq().unwrap();
+    println!("IRQ count: {}", irq_count);
 ```
 
 You can also open it by specifying a name obtained from /sys/class/uio:
 
 ```rust
-    let uio_acc = UioAccessor::<u32>::new_with_name("uio-sample");
+    let uio_acc = UioAccessor::<u32>::new_with_name("uio-sample").unwrap();
 ```
 
 ## u-dma-buf
@@ -60,12 +69,16 @@ You can also open it by specifying a name obtained from /sys/class/uio:
     let udmabuf_acc = UdmabufAccessor::<usize>::new("udmabuf4", false).unwrap();
     println!("udmabuf4 phys addr : 0x{:x}", udmabuf_acc.phys_addr());
     println!("udmabuf4 size      : 0x{:x}", udmabuf_acc.size());
-    udmabuf_acc.write_mem_u32(0x00, 0x1234);
+    udmabuf_acc.write_mem_u32(0x00, 0x1234).unwrap();
 ```
 
 ## /dev/mem
 
+Accessing `/dev/mem` for memory-mapped I/O can be written as follows:
+
 ```rust
     let mem_acc = MmapAccessor::<usize>::new("/dev/mem", 0xa0000000, 0x1000).unwrap();
-    mem_acc.write_reg_u32(0x10, 0x12345678);
+    mem_acc.write_reg_u32(0x10, 0x12345678).unwrap();
+    let value = mem_acc.read_reg_u32(0x10).unwrap();
+    println!("Value at register 0x10: 0x{:x}", value);
 ```
