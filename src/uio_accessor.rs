@@ -54,6 +54,18 @@ impl UioRegion {
         Ok(count)
     }
 
+    pub fn peek_irq(&self, timeout_ms: i32) -> Result<bool, Box<dyn Error>> {
+        self.mmap_region.poll(timeout_ms)
+    }
+
+    pub fn poll_irq(&mut self, timeout_ms: i32) -> Result<Option<u32>, Box<dyn Error>> {
+        if self.peek_irq(timeout_ms)? {
+            let irq_count = self.wait_irq()?;
+            return Ok(Some(irq_count));
+        }
+        Ok(None) // Timeout
+    }
+
     pub fn read_name(uio_num: usize) -> Result<String, Box<dyn Error>> {
         let fname = format!("/sys/class/uio/uio{}/name", uio_num);
         Ok(read_file_to_string(&fname)?.trim().to_string())
@@ -162,10 +174,12 @@ impl<U> UioAccessor<U> {
         to self.mem_accessor.region() {
             pub fn addr(&self) -> usize;
             pub fn size(&self) -> usize;
+            pub fn peek_irq(&self, timeout_ms: i32) -> Result<bool, Box<dyn Error>>;
         }
         to self.mem_accessor.region_mut() {
             pub fn set_irq_enable(&mut self, enable: bool) -> Result<(), Box<dyn Error>>;
             pub fn wait_irq(&mut self) -> Result<u32, Box<dyn Error>>;
+            pub fn poll_irq(&mut self, timeout_ms: i32) -> Result<Option<u32>, Box<dyn Error>>;
         }
     }
 }

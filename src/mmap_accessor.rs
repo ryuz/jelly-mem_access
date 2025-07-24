@@ -14,6 +14,10 @@ use std::io::prelude::*;
 use std::num::NonZeroUsize;
 use std::os::unix::fs::OpenOptionsExt;
 use std::sync::{Arc, RwLock};
+use std::os::unix::io::AsRawFd;
+use nix::poll::{poll, PollFd, PollFlags};
+use std::os::unix::io::BorrowedFd;
+use nix::poll::PollTimeout;
 
 #[derive(Debug)]
 struct MmapFile {
@@ -80,6 +84,36 @@ impl MmapFile {
         let size = self.file.read(buf)?;
         Ok(size)
     }
+
+    pub fn poll(&self, timeout_ms: i32) -> Result<bool, Box<dyn Error>> {
+        let fd = unsafe { BorrowedFd::borrow_raw(self.file.as_raw_fd()) };
+        let mut poll_fds = [PollFd::new(fd, PollFlags::POLLIN)];
+
+        // Convert timeout_ms to PollTimeout using TryFrom
+        let timeout = PollTimeout::try_from(timeout_ms).map_err(|_| {
+            Box::new(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Invalid timeout value",
+            ))
+        })?;
+
+        let ret = poll(&mut poll_fds, timeout)?;
+        if ret == 0 {
+            // Timeout
+            return Ok(false);
+        }
+
+        if let Some(revents) = poll_fds[0].revents() {
+            if revents.contains(PollFlags::POLLIN) {
+                return Ok(true);
+            }
+        }
+
+        Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Unexpected poll result",
+        )))
+    }
 }
 
 impl Drop for MmapFile {
@@ -124,6 +158,10 @@ impl MmapRegion {
 
     pub fn read(&mut self, buf: &mut [u8]) -> Result<usize, Box<dyn Error>> {
         self.mfile.write().unwrap().read(buf)
+    }
+
+    pub fn poll(&self, timeout_ms: i32) -> Result<bool, Box<dyn Error>> {
+        self.mfile.read().unwrap().poll(timeout_ms)
     }
 }
 
