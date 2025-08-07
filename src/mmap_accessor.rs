@@ -243,7 +243,7 @@ impl<U> MmapAccessor<U> {
 
 impl<U> Clone for MmapAccessor<U> {
     fn clone(&self) -> Self {
-        self.subclone(0, 0)
+        self.subclone_::<U>(0, 0)
     }
 }
 

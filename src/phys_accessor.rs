@@ -95,7 +95,7 @@ impl<U, const ADDR: usize, const SIZE: usize> PhysAccessor<U, ADDR, SIZE> {
 
 impl<U, const ADDR: usize, const SIZE: usize> Clone for PhysAccessor<U, ADDR, SIZE> {
     fn clone(&self) -> Self {
-        self.subclone(0, 0)
+        self.subclone_::<U>(0, 0)
     }
 }
 
