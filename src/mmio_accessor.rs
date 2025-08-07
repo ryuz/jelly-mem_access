@@ -103,7 +103,7 @@ impl<U> MmioAccessor<U> {
 
 impl<U> Clone for MmioAccessor<U> {
     fn clone(&self) -> Self {
-        self.subclone(0, 0)
+        self.subclone_::<U>(0, 0)
     }
 }
 

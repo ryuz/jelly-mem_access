@@ -65,11 +65,14 @@ You can also open it by specifying a name obtained from /sys/class/uio:
 [u-dma-buf](https://github.com/ikwzm/udmabuf/) access in Linux programming can be written as follows:
 
 ```rust
+use jelly_mem_access::MemAccess;
     let udmabuf_num = 4;  // ex.) /dev/udmabuf4
     let udmabuf_acc = UdmabufAccessor::<usize>::new("udmabuf4", false).unwrap();
-    println!("udmabuf4 phys addr : 0x{:x}", udmabuf_acc.phys_addr());
-    println!("udmabuf4 size      : 0x{:x}", udmabuf_acc.size());
-    udmabuf_acc.write_mem_u32(0x00, 0x1234).unwrap();
+    println!("udmabuf4 phys addr : 0x{:x}", udmabuf_acc.phys_addr()); // MemAccessトレイトが必要
+    println!("udmabuf4 size      : 0x{:x}", udmabuf_acc.size());      // MemAccessトレイトが必要
+    unsafe {
+        udmabuf_acc.write_mem_u32(0x00, 0x1234);
+    }
 ```
 
 ## /dev/mem

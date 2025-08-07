@@ -413,7 +413,7 @@ impl<U> UdmabufAccessor<U> {
 
 impl<U> Clone for UdmabufAccessor<U> {
     fn clone(&self) -> Self {
-        self.subclone(0, 0)
+        self.subclone_::<U>(0, 0)
     }
 }
 

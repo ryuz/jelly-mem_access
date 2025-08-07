@@ -297,3 +297,9 @@ impl<U> MemAccess for UioAccessor<U> {
         }
     }
 }
+
+impl<U> Clone for UioAccessor<U> {
+    fn clone(&self) -> Self {
+        self.subclone_::<U>(0, 0)
+    }
+}
