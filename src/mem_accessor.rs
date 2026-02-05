@@ -198,13 +198,13 @@ impl<T: MemRegion, U> MemAccessBase for MemAccessor<T, U> {
     }
 
     unsafe fn copy_to_<V>(&self, src_adr: usize, dst_ptr: *mut V, count: usize) {
-        assert!(src_adr + count * core::mem::size_of::<V>() <= self.size());
+        debug_assert!(src_adr + count * core::mem::size_of::<V>() <= self.size());
         let src_ptr: *const V = (self.addr() + src_adr) as *const V;
         core::ptr::copy_nonoverlapping(src_ptr, dst_ptr, count);
     }
 
     unsafe fn copy_from_<V>(&self, src_ptr: *const V, dst_adr: usize, count: usize) {
-        assert!(dst_adr + count * core::mem::size_of::<V>() <= self.size());
+        debug_assert!(dst_adr + count * core::mem::size_of::<V>() <= self.size());
         let dst_ptr: *mut V = (self.addr() + dst_adr) as *mut V;
         core::ptr::copy_nonoverlapping(src_ptr, dst_ptr, count);
     }
