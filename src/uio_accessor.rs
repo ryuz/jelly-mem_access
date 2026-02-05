@@ -42,7 +42,7 @@ impl UioRegion {
     }
 
     pub fn set_irq_enable(&mut self, enable: bool) -> Result<(), Box<dyn Error>> {
-        let data: [u8; 4] = unsafe { std::mem::transmute(if enable { 1u32 } else { 0u32 }) };
+        let data: [u8; 4] = if enable { 1u32 } else { 0u32 }.to_ne_bytes();
         self.mmap_region.write(&data)?;
         Ok(())
     }
