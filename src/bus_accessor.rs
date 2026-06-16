@@ -65,6 +65,7 @@ impl Endianness for BigEndian {
 pub enum BusAccessorError<E> {
     AddressOverflow,
     AddressOutOfRange,
+    OutOfBounds,
     StrbTooNarrow,
     Bus(E),
 }
@@ -74,6 +75,7 @@ impl<E: fmt::Display> fmt::Display for BusAccessorError<E> {
         match self {
             Self::AddressOverflow => write!(f, "address arithmetic overflow"),
             Self::AddressOutOfRange => write!(f, "address is out of representable range"),
+            Self::OutOfBounds => write!(f, "access exceeds region bounds"),
             Self::StrbTooNarrow => write!(f, "strb width is smaller than data byte lanes"),
             Self::Bus(err) => write!(f, "bus access failed: {err}"),
         }
