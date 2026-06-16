@@ -4,6 +4,7 @@ use core::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
 use super::bus_accessor::{Bus, BusAccessorError, BusAddress, BusValue, BusWord, Endianness};
+use super::{MemAccess, MemAccessTryError};
 
 /// `Bus` の所有権を `Arc<Mutex<B>>` で共有し、`subclone` によるサブリージョン分割が
 /// できるバスアクセサ。
@@ -254,6 +255,311 @@ where
 
     pub fn read_usize(&self, offset: usize) -> Result<usize, BusAccessorError<B::Error>> {
         self.read_value(offset)
+    }
+}
+
+fn map_bus_err<E>(err: BusAccessorError<E>) -> MemAccessTryError {
+    match err {
+        BusAccessorError::AddressOverflow => MemAccessTryError::AddressOverflow,
+        BusAccessorError::AddressOutOfRange => MemAccessTryError::AddressOutOfRange,
+        BusAccessorError::OutOfBounds => MemAccessTryError::OutOfBounds,
+        BusAccessorError::StrbTooNarrow => MemAccessTryError::StrbTooNarrow,
+        BusAccessorError::Bus(_) => MemAccessTryError::AccessFault,
+    }
+}
+
+impl<B, A, D, S, E> MemAccess for SharedBusAccessor<B, A, D, S, E>
+where
+    B: Bus<A, D, S>,
+    A: BusAddress,
+    D: BusWord,
+    S: BusWord,
+    E: Endianness,
+{
+    fn addr(&self) -> usize { self.base }
+    fn size(&self) -> usize { self.size }
+    fn phys_addr(&self) -> usize { self.base }
+
+    unsafe fn copy_to_usize(&self, src_adr: usize, dst_ptr: *mut usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_usize(src_adr + i * core::mem::size_of::<usize>()) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_u8(&self, src_adr: usize, dst_ptr: *mut u8, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_u8(src_adr + i) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_u16(&self, src_adr: usize, dst_ptr: *mut u16, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_u16(src_adr + i * core::mem::size_of::<u16>()) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_u32(&self, src_adr: usize, dst_ptr: *mut u32, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_u32(src_adr + i * core::mem::size_of::<u32>()) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_u64(&self, src_adr: usize, dst_ptr: *mut u64, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_u64(src_adr + i * core::mem::size_of::<u64>()) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_isize(&self, src_adr: usize, dst_ptr: *mut isize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_isize(src_adr + i * core::mem::size_of::<isize>()) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_i8(&self, src_adr: usize, dst_ptr: *mut i8, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_i8(src_adr + i) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_i16(&self, src_adr: usize, dst_ptr: *mut i16, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_i16(src_adr + i * core::mem::size_of::<i16>()) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_i32(&self, src_adr: usize, dst_ptr: *mut i32, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_i32(src_adr + i * core::mem::size_of::<i32>()) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_i64(&self, src_adr: usize, dst_ptr: *mut i64, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_i64(src_adr + i * core::mem::size_of::<i64>()) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_f32(&self, src_adr: usize, dst_ptr: *mut f32, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_f32(src_adr + i * core::mem::size_of::<f32>()) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+    unsafe fn copy_to_f64(&self, src_adr: usize, dst_ptr: *mut f64, count: usize) {
+        for i in 0..count {
+            let v = unsafe { self.read_mem_f64(src_adr + i * core::mem::size_of::<f64>()) };
+            unsafe { core::ptr::write(dst_ptr.add(i), v) };
+        }
+    }
+
+    unsafe fn copy_from_usize(&self, src_ptr: *const usize, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_usize(dst_adr + i * core::mem::size_of::<usize>(), v) };
+        }
+    }
+    unsafe fn copy_from_u8(&self, src_ptr: *const u8, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_u8(dst_adr + i, v) };
+        }
+    }
+    unsafe fn copy_from_u16(&self, src_ptr: *const u16, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_u16(dst_adr + i * core::mem::size_of::<u16>(), v) };
+        }
+    }
+    unsafe fn copy_from_u32(&self, src_ptr: *const u32, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_u32(dst_adr + i * core::mem::size_of::<u32>(), v) };
+        }
+    }
+    unsafe fn copy_from_u64(&self, src_ptr: *const u64, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_u64(dst_adr + i * core::mem::size_of::<u64>(), v) };
+        }
+    }
+    unsafe fn copy_from_isize(&self, src_ptr: *const isize, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_isize(dst_adr + i * core::mem::size_of::<isize>(), v) };
+        }
+    }
+    unsafe fn copy_from_i8(&self, src_ptr: *const i8, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_i8(dst_adr + i, v) };
+        }
+    }
+    unsafe fn copy_from_i16(&self, src_ptr: *const i16, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_i16(dst_adr + i * core::mem::size_of::<i16>(), v) };
+        }
+    }
+    unsafe fn copy_from_i32(&self, src_ptr: *const i32, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_i32(dst_adr + i * core::mem::size_of::<i32>(), v) };
+        }
+    }
+    unsafe fn copy_from_i64(&self, src_ptr: *const i64, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_i64(dst_adr + i * core::mem::size_of::<i64>(), v) };
+        }
+    }
+    unsafe fn copy_from_f32(&self, src_ptr: *const f32, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_f32(dst_adr + i * core::mem::size_of::<f32>(), v) };
+        }
+    }
+    unsafe fn copy_from_f64(&self, src_ptr: *const f64, dst_adr: usize, count: usize) {
+        for i in 0..count {
+            let v = unsafe { core::ptr::read(src_ptr.add(i)) };
+            unsafe { self.write_mem_f64(dst_adr + i * core::mem::size_of::<f64>(), v) };
+        }
+    }
+
+    unsafe fn write_mem(&self, offset: usize, data: usize) { unsafe { self.try_write_mem(offset, data) }.unwrap(); }
+    unsafe fn write_mem_usize(&self, offset: usize, data: usize) { unsafe { self.try_write_mem_usize(offset, data) }.unwrap(); }
+    unsafe fn write_mem_u8(&self, offset: usize, data: u8) { unsafe { self.try_write_mem_u8(offset, data) }.unwrap(); }
+    unsafe fn write_mem_u16(&self, offset: usize, data: u16) { unsafe { self.try_write_mem_u16(offset, data) }.unwrap(); }
+    unsafe fn write_mem_u32(&self, offset: usize, data: u32) { unsafe { self.try_write_mem_u32(offset, data) }.unwrap(); }
+    unsafe fn write_mem_u64(&self, offset: usize, data: u64) { unsafe { self.try_write_mem_u64(offset, data) }.unwrap(); }
+    unsafe fn write_mem_isize(&self, offset: usize, data: isize) { unsafe { self.try_write_mem_isize(offset, data) }.unwrap(); }
+    unsafe fn write_mem_i8(&self, offset: usize, data: i8) { unsafe { self.try_write_mem_i8(offset, data) }.unwrap(); }
+    unsafe fn write_mem_i16(&self, offset: usize, data: i16) { unsafe { self.try_write_mem_i16(offset, data) }.unwrap(); }
+    unsafe fn write_mem_i32(&self, offset: usize, data: i32) { unsafe { self.try_write_mem_i32(offset, data) }.unwrap(); }
+    unsafe fn write_mem_i64(&self, offset: usize, data: i64) { unsafe { self.try_write_mem_i64(offset, data) }.unwrap(); }
+    unsafe fn write_mem_f32(&self, offset: usize, data: f32) { unsafe { self.try_write_mem_f32(offset, data) }.unwrap(); }
+    unsafe fn write_mem_f64(&self, offset: usize, data: f64) { unsafe { self.try_write_mem_f64(offset, data) }.unwrap(); }
+
+    unsafe fn read_mem(&self, offset: usize) -> usize { unsafe { self.try_read_mem(offset) }.unwrap() }
+    unsafe fn read_mem_usize(&self, offset: usize) -> usize { unsafe { self.try_read_mem_usize(offset) }.unwrap() }
+    unsafe fn read_mem_u8(&self, offset: usize) -> u8 { unsafe { self.try_read_mem_u8(offset) }.unwrap() }
+    unsafe fn read_mem_u16(&self, offset: usize) -> u16 { unsafe { self.try_read_mem_u16(offset) }.unwrap() }
+    unsafe fn read_mem_u32(&self, offset: usize) -> u32 { unsafe { self.try_read_mem_u32(offset) }.unwrap() }
+    unsafe fn read_mem_u64(&self, offset: usize) -> u64 { unsafe { self.try_read_mem_u64(offset) }.unwrap() }
+    unsafe fn read_mem_isize(&self, offset: usize) -> isize { unsafe { self.try_read_mem_isize(offset) }.unwrap() }
+    unsafe fn read_mem_i8(&self, offset: usize) -> i8 { unsafe { self.try_read_mem_i8(offset) }.unwrap() }
+    unsafe fn read_mem_i16(&self, offset: usize) -> i16 { unsafe { self.try_read_mem_i16(offset) }.unwrap() }
+    unsafe fn read_mem_i32(&self, offset: usize) -> i32 { unsafe { self.try_read_mem_i32(offset) }.unwrap() }
+    unsafe fn read_mem_i64(&self, offset: usize) -> i64 { unsafe { self.try_read_mem_i64(offset) }.unwrap() }
+    unsafe fn read_mem_f32(&self, offset: usize) -> f32 { unsafe { self.try_read_mem_f32(offset) }.unwrap() }
+    unsafe fn read_mem_f64(&self, offset: usize) -> f64 { unsafe { self.try_read_mem_f64(offset) }.unwrap() }
+
+    unsafe fn write_reg(&self, reg: usize, data: usize) { unsafe { self.write_mem(reg * D::BYTES, data) } }
+    unsafe fn write_reg_usize(&self, reg: usize, data: usize) { unsafe { self.write_mem_usize(reg * D::BYTES, data) } }
+    unsafe fn write_reg_u8(&self, reg: usize, data: u8) { unsafe { self.write_mem_u8(reg * D::BYTES, data) } }
+    unsafe fn write_reg_u16(&self, reg: usize, data: u16) { unsafe { self.write_mem_u16(reg * D::BYTES, data) } }
+    unsafe fn write_reg_u32(&self, reg: usize, data: u32) { unsafe { self.write_mem_u32(reg * D::BYTES, data) } }
+    unsafe fn write_reg_u64(&self, reg: usize, data: u64) { unsafe { self.write_mem_u64(reg * D::BYTES, data) } }
+    unsafe fn write_reg_isize(&self, reg: usize, data: isize) { unsafe { self.write_mem_isize(reg * D::BYTES, data) } }
+    unsafe fn write_reg_i8(&self, reg: usize, data: i8) { unsafe { self.write_mem_i8(reg * D::BYTES, data) } }
+    unsafe fn write_reg_i16(&self, reg: usize, data: i16) { unsafe { self.write_mem_i16(reg * D::BYTES, data) } }
+    unsafe fn write_reg_i32(&self, reg: usize, data: i32) { unsafe { self.write_mem_i32(reg * D::BYTES, data) } }
+    unsafe fn write_reg_i64(&self, reg: usize, data: i64) { unsafe { self.write_mem_i64(reg * D::BYTES, data) } }
+    unsafe fn write_reg_f32(&self, reg: usize, data: f32) { unsafe { self.write_mem_f32(reg * D::BYTES, data) } }
+    unsafe fn write_reg_f64(&self, reg: usize, data: f64) { unsafe { self.write_mem_f64(reg * D::BYTES, data) } }
+
+    unsafe fn read_reg(&self, reg: usize) -> usize { unsafe { self.read_mem(reg * D::BYTES) } }
+    unsafe fn read_reg_usize(&self, reg: usize) -> usize { unsafe { self.read_mem_usize(reg * D::BYTES) } }
+    unsafe fn read_reg_u8(&self, reg: usize) -> u8 { unsafe { self.read_mem_u8(reg * D::BYTES) } }
+    unsafe fn read_reg_u16(&self, reg: usize) -> u16 { unsafe { self.read_mem_u16(reg * D::BYTES) } }
+    unsafe fn read_reg_u32(&self, reg: usize) -> u32 { unsafe { self.read_mem_u32(reg * D::BYTES) } }
+    unsafe fn read_reg_u64(&self, reg: usize) -> u64 { unsafe { self.read_mem_u64(reg * D::BYTES) } }
+    unsafe fn read_reg_isize(&self, reg: usize) -> isize { unsafe { self.read_mem_isize(reg * D::BYTES) } }
+    unsafe fn read_reg_i8(&self, reg: usize) -> i8 { unsafe { self.read_mem_i8(reg * D::BYTES) } }
+    unsafe fn read_reg_i16(&self, reg: usize) -> i16 { unsafe { self.read_mem_i16(reg * D::BYTES) } }
+    unsafe fn read_reg_i32(&self, reg: usize) -> i32 { unsafe { self.read_mem_i32(reg * D::BYTES) } }
+    unsafe fn read_reg_i64(&self, reg: usize) -> i64 { unsafe { self.read_mem_i64(reg * D::BYTES) } }
+    unsafe fn read_reg_f32(&self, reg: usize) -> f32 { unsafe { self.read_mem_f32(reg * D::BYTES) } }
+    unsafe fn read_reg_f64(&self, reg: usize) -> f64 { unsafe { self.read_mem_f64(reg * D::BYTES) } }
+
+    unsafe fn try_write_mem(&self, offset: usize, data: usize) -> Result<(), MemAccessTryError> {
+        self.write_usize(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_usize(&self, offset: usize, data: usize) -> Result<(), MemAccessTryError> {
+        self.write_usize(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_u8(&self, offset: usize, data: u8) -> Result<(), MemAccessTryError> {
+        self.write_u8(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_u16(&self, offset: usize, data: u16) -> Result<(), MemAccessTryError> {
+        self.write_u16(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_u32(&self, offset: usize, data: u32) -> Result<(), MemAccessTryError> {
+        self.write_u32(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_u64(&self, offset: usize, data: u64) -> Result<(), MemAccessTryError> {
+        self.write_u64(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_isize(&self, offset: usize, data: isize) -> Result<(), MemAccessTryError> {
+        self.write_value(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_i8(&self, offset: usize, data: i8) -> Result<(), MemAccessTryError> {
+        self.write_value(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_i16(&self, offset: usize, data: i16) -> Result<(), MemAccessTryError> {
+        self.write_value(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_i32(&self, offset: usize, data: i32) -> Result<(), MemAccessTryError> {
+        self.write_value(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_i64(&self, offset: usize, data: i64) -> Result<(), MemAccessTryError> {
+        self.write_value(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_f32(&self, offset: usize, data: f32) -> Result<(), MemAccessTryError> {
+        self.write_value(offset, data).map_err(map_bus_err)
+    }
+    unsafe fn try_write_mem_f64(&self, offset: usize, data: f64) -> Result<(), MemAccessTryError> {
+        self.write_value(offset, data).map_err(map_bus_err)
+    }
+
+    unsafe fn try_read_mem(&self, offset: usize) -> Result<usize, MemAccessTryError> {
+        self.read_usize(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_usize(&self, offset: usize) -> Result<usize, MemAccessTryError> {
+        self.read_usize(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_u8(&self, offset: usize) -> Result<u8, MemAccessTryError> {
+        self.read_u8(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_u16(&self, offset: usize) -> Result<u16, MemAccessTryError> {
+        self.read_u16(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_u32(&self, offset: usize) -> Result<u32, MemAccessTryError> {
+        self.read_u32(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_u64(&self, offset: usize) -> Result<u64, MemAccessTryError> {
+        self.read_u64(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_isize(&self, offset: usize) -> Result<isize, MemAccessTryError> {
+        self.read_value(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_i8(&self, offset: usize) -> Result<i8, MemAccessTryError> {
+        self.read_value(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_i16(&self, offset: usize) -> Result<i16, MemAccessTryError> {
+        self.read_value(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_i32(&self, offset: usize) -> Result<i32, MemAccessTryError> {
+        self.read_value(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_i64(&self, offset: usize) -> Result<i64, MemAccessTryError> {
+        self.read_value(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_f32(&self, offset: usize) -> Result<f32, MemAccessTryError> {
+        self.read_value(offset).map_err(map_bus_err)
+    }
+    unsafe fn try_read_mem_f64(&self, offset: usize) -> Result<f64, MemAccessTryError> {
+        self.read_value(offset).map_err(map_bus_err)
     }
 }
 
