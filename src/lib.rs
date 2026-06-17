@@ -12,6 +12,14 @@ pub use phys_accessor::*;
 pub mod mmio_accessor;
 pub use mmio_accessor::*;
 
+pub mod bus_accessor;
+pub use bus_accessor::*;
+
+#[cfg(feature = "std")]
+pub mod shared_bus_accessor;
+#[cfg(feature = "std")]
+pub use shared_bus_accessor::*;
+
 #[cfg(all(feature = "std", unix))]
 pub mod mmap_accessor;
 #[cfg(all(feature = "std", unix))]
