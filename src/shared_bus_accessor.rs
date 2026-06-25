@@ -78,6 +78,29 @@ where
         self.size
     }
 
+    /// 共有参照が残っていなければ、所有している `bus` を取り出す。
+    pub fn into_inner(self) -> Result<B, Self> {
+        let Self {
+            bus,
+            base,
+            size,
+            _phantom: _,
+        } = self;
+
+        match Arc::try_unwrap(bus) {
+            Ok(mutex) => match mutex.into_inner() {
+                Ok(bus) => Ok(bus),
+                Err(poisoned) => Ok(poisoned.into_inner()),
+            },
+            Err(bus) => Err(Self {
+                bus,
+                base,
+                size,
+                _phantom: PhantomData,
+            }),
+        }
+    }
+
     /// エンディアン型パラメータを変えてサブクローンを作る汎用版。
     ///
     /// - `offset`: このアクセサ先頭からのバイトオフセット
@@ -608,6 +631,27 @@ mod tests {
         let clone = accessor.clone();
         accessor.write_u32(0, 0xDEAD_BEEF).unwrap();
         assert_eq!(clone.read_u32(0).unwrap(), 0xDEAD_BEEF);
+    }
+
+    #[test]
+    fn into_inner_returns_bus_when_unique() {
+        let accessor: SharedBusAccessor<MockBus, usize, u32, u8, LittleEndian> =
+            SharedBusAccessor::new(MockBus::default());
+
+        let bus = accessor.into_inner().unwrap();
+        assert_eq!(bus.mem, [0; 64]);
+    }
+
+    #[test]
+    fn into_inner_fails_when_shared() {
+        let accessor: SharedBusAccessor<MockBus, usize, u32, u8, LittleEndian> =
+            SharedBusAccessor::new(MockBus::default());
+        let clone = accessor.clone();
+
+        let accessor = accessor.into_inner().unwrap_err();
+        drop(clone);
+
+        assert!(accessor.into_inner().is_ok());
     }
 
     #[test]
